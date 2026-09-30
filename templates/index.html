@@ -4,707 +4,525 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Estoque por data – Locação de equipamentos</title>
-<style>
-:root{--onpri:#fff;--tint:#e1f0f6;--bg:#eef2f4;--card:#fff;--ink:#14232b;--mut:#5d6f78;--line:#d3dde2;--pri:#0f5e7a;--ok:#1b7a4b;--warn:#b26a00;--bad:#b3261e;--okbg:#e3f3ea;--warnbg:#fff1d9;--badbg:#fbe4e2;
-box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1a20;--card:#15262e;--ink:#e6eef1;--mut:#93a6ae;--line:#284049;--pri:#5cc0e0;--ok:#5fd394;--warn:#f0b04a;--bad:#ff8a80;--okbg:#12362a;--warnbg:#3a2e12;--badbg:#3c1a18;--onpri:#0b1a20;--tint:#1c3a46}}
-:root[data-theme="dark"]{--bg:#0e1a20;--card:#15262e;--ink:#e6eef1;--mut:#93a6ae;--line:#284049;--pri:#5cc0e0;--ok:#5fd394;--warn:#f0b04a;--bad:#ff8a80;--okbg:#12362a;--warnbg:#3a2e12;--badbg:#3c1a18;--onpri:#0b1a20;--tint:#1c3a46}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
-*{box-sizing:border-box}
-body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);font:15px/1.45 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif}
-main{width:100%;max-width:none;margin:0;padding:22px 28px 32px}
-h1{font-size:28px;line-height:1.2;margin:4px 0 4px;letter-spacing:-.3px}
-p.sub{margin:0;color:var(--mut);font-size:14px}
-nav{display:grid;grid-template-columns:repeat(7,minmax(120px,1fr));gap:8px;margin:20px 0 18px;position:sticky;top:0;z-index:20;padding:8px 0;background:linear-gradient(var(--bg) 75%,transparent);backdrop-filter:blur(5px)}
-nav button{border:1.5px solid var(--pri);background:var(--card);color:var(--ink);padding:11px 14px;border-radius:9px;font:inherit;font-weight:600;cursor:pointer;min-height:44px;transition:.15s ease}
-nav button[aria-selected=true]{background:var(--pri);color:var(--onpri);border-color:var(--pri)}
-:focus-visible{outline:3px solid var(--pri);outline-offset:2px}
-section{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:18px;box-shadow:0 2px 8px rgba(20,35,43,.05)}
-h2{font-size:18px;margin:0 0 14px}
-.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;align-items:end}
-label{display:flex;flex-direction:column;font-size:13px;color:var(--mut);gap:3px}
-input,select{font:inherit;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);min-width:0;width:100%}
-button.b{background:var(--pri);color:var(--onpri);border:0;border-radius:8px;padding:11px 20px;font:inherit;font-weight:700;cursor:pointer;box-shadow:0 2px 0 rgba(0,0,0,.28)}
-button.g{background:var(--tint);color:var(--pri);border:1.5px solid var(--pri);border-radius:8px;padding:8px 13px;font:inherit;font-weight:600;cursor:pointer}
-button.g.d{color:var(--bad);border-color:var(--bad);background:var(--badbg)}
-button:hover{filter:brightness(1.1)}
-button:active{transform:translateY(1px)}
-#lTb td:first-child,#eTb td:first-child,#hOut td:nth-child(3),#hOut td:nth-child(5){font-weight:700}
-#lTb small,#lTb .warn{font-weight:400}
-.it small{color:var(--ink)}
-.box{border-radius:8px;padding:12px;margin-top:12px}
-.ok{background:var(--okbg);color:var(--ok)}.warn{background:var(--warnbg);color:var(--warn)}.bad{background:var(--badbg);color:var(--bad)}
-.big{font-size:26px;font-weight:700}
-.scroll{overflow-x:auto}
-table{border-collapse:collapse;width:100%;min-width:860px;background:var(--card)}
-th,td{text-align:left;padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
-th{font-size:13px;color:var(--mut);font-weight:600}
-.msg{margin-top:10px;font-weight:600}
-.hidden{display:none}
-.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-top:12px}
-.col{border:1px solid var(--line);border-radius:8px;padding:10px 12px}
-.col h3{margin:0 0 6px;font-size:15px}
-.it{padding:7px 0;border-top:1px solid var(--line)}
-.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px;margin-top:4px}
-small{color:var(--mut)}
-@media(max-width:1100px){nav{grid-template-columns:repeat(4,minmax(120px,1fr))}}
-@media(max-width:700px){main{padding:14px}nav{grid-template-columns:repeat(2,minmax(120px,1fr));position:static;background:none;backdrop-filter:none}.row{grid-template-columns:1fr}section{padding:15px}h1{font-size:23px}}
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 <main>
-<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
-<div><h1>Estoque por data</h1>
-<p class="sub">Consulte a disponibilidade em qualquer período, considerando devoluções e renovações.</p></div>
-<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><button class="g" id="tema" style="white-space:nowrap;margin-top:8px"></button><small id="dbStatus">Banco local</small></div>
-</div>
-<nav role="tablist">
-<button role="tab" data-t="disp" aria-selected="true">Disponibilidade</button>
-<button role="tab" data-t="nova" aria-selected="false">Nova locação</button>
-<button role="tab" data-t="loc" aria-selected="false">Locações</button>
-<button role="tab" data-t="hist" aria-selected="false">Histórico</button>
-<button role="tab" data-t="man" aria-selected="false">Manutenção</button>
-<button role="tab" data-t="eq" aria-selected="false">Equipamentos</button>
-<button role="tab" data-t="dados" aria-selected="false">Dados</button>
-</nav>
+  <!-- TELA DE LOGIN / CADASTRO -->
+  <div id="authArea" class="auth-box">
+    <h1 id="authTitle" style="text-align: center; margin-bottom: 20px;">Entrar no Sistema</h1>
+    <p id="authSub" class="sub" style="text-align: center; margin-bottom: 20px;">Insira suas credenciais para continuar</p>
+    
+    <div style="display: flex; flex-direction: column; gap: 15px;">
+      <label>E-mail:
+        <input type="email" id="authEmail" placeholder="seu@email.com">
+      </label>
+      <label>Senha:
+        <input type="password" id="authPass" placeholder="******">
+      </label>
+      
+      <button class="b" id="authBtn" onclick="fazerAuth()" style="width: 100%; margin-top: 10px;">Entrar</button>
+      
+      <div style="text-align: center; margin-top: 10px;">
+        <small id="authToggleMsg">Não tem uma conta? <a href="#" onclick="toggleAuthMode(event)" style="color: var(--pri);">Cadastre-se</a></small>
+      </div>
+    </div>
+    
+    <div id="authFeedback" class="msg" style="text-align: center;"></div>
+  </div>
 
-<div id="disp">
-<section>
-<h2>Consultar período</h2>
-<div class="row">
-<label>Equipamento<select id="qEq"></select></label>
-<label>Quantidade<input id="qQtd" type="number" min="1" value="1"></label>
-<label>Início<input id="qIni" type="date"></label>
-<label>Fim<input id="qFim" type="date"></label>
-<button class="b" id="qGo">Consultar</button>
-<button class="g" id="qClr">Limpar</button>
-</div>
-<div id="qOut"></div>
-</section>
-</div>
+  <!-- CONTEÚDO PRINCIPAL (Exibido após o login) -->
+  <div id="appArea" class="hidden">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+      <div>
+        <h1>Estoque por data – Locação de equipamentos</h1>
+        <p class="sub">Consulte a disponibilidade real em tempo real, cadastre saídas, reservas e locações.</p>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span id="userDisplay" style="font-size: 14px; color: var(--mut);"></span>
+        <button class="g" onclick="fazerLogout()">Sair</button>
+      </div>
+    </div>
 
-<div id="nova" class="hidden">
-<section>
-<h2>Nova locação</h2>
-<div class="row">
-<label>Equipamento<select id="nEq"></select></label>
-<label>Cliente<input id="nCli" placeholder="Nome do cliente"></label>
-<label>Telefone<input id="nTel" type="tel" placeholder="(11) 90000-0000"></label>
-<label>Quantidade<input id="nQtd" type="number" min="1" value="1"></label>
-<label>Início<input id="nIni" type="date"></label>
-<label>Fim<input id="nFim" type="date"></label>
-<button class="b" id="nAdd">Registrar</button>
-</div>
-<div class="msg" id="nMsg" role="status"></div>
-</section>
-</div>
+    <nav id="topNav">
+      <button id="tab-0" aria-selected="true" onclick="mudaAba(0)">1. Estoque Base</button>
+      <button id="tab-1" aria-selected="false" onclick="mudaAba(1)">2. Consulta Data</button>
+      <button id="tab-2" aria-selected="false" onclick="mudaAba(2)">3. Saída Externa</button>
+      <button id="tab-3" aria-selected="false" onclick="mudaAba(3)">4. Histórico</button>
+      <button id="tab-4" aria-selected="false" onclick="mudaAba(4)">5. Reservas Prontas</button>
+      <button id="tab-5" aria-selected="false" onclick="mudaAba(5)">6. Locações em Andamento</button>
+      <button id="tab-6" aria-selected="false" onclick="mudaAba(6)">7. Relatórios</button>
+    </nav>
 
-<div id="loc" class="hidden">
-<section id="edSec" class="hidden">
-<h2>Editar locação</h2>
-<div class="row">
-<label>Equipamento<select id="edEq"></select></label>
-<label>Cliente<input id="edCli"></label>
-<label>Telefone<input id="edTel" type="tel"></label>
-<label>Quantidade<input id="edQtd" type="number" min="1"></label>
-<label>Início<input id="edIni" type="date"></label>
-<label>Fim<input id="edFim" type="date"></label>
-</div>
-<div class="row" style="margin-top:12px">
-<button class="b" id="edSave">Salvar alterações</button>
-<button class="g" id="edCancel">Cancelar</button>
-<button class="g d hidden" id="edUndo">Desfazer confirmação</button>
-</div>
-<div class="msg" id="edMsg" role="status"></div>
-</section>
-<section>
-<h2>Movimentação do dia</h2>
-<div class="row">
-<button class="g" id="dPrev">Dia anterior</button>
-<label>Data<input id="dDia" type="date"></label>
-<button class="g" id="dNext">Próximo dia</button>
-<button class="g" id="dHoje">Hoje</button>
-</div>
-<div class="cols" id="dOut"></div>
-</section>
-<section>
-<h2>Locações registradas</h2>
-<div class="scroll"><table><thead><tr><th>Equipamento</th><th>Cliente</th><th>Qtd</th><th>Período</th><th>Renovação / status</th><th>Encerramento</th></tr></thead><tbody id="lTb"></tbody></table></div>
-<div class="msg" id="lMsg" role="status"></div>
-</section>
-</div>
+    <!-- ABA 1: ESTOQUE BASE -->
+    <section id="sec-0">
+      <h2>Estoque Base Cadastrado</h2>
+      <div class="row" style="margin-bottom: 15px;">
+        <label>Código do Equipamento:
+          <input type="text" id="cadCod" placeholder="Ex: EQ-01">
+        </label>
+        <label>Nome do Equipamento:
+          <input type="text" id="cadNome" placeholder="Ex: Projetor HD">
+        </label>
+        <label>Qtd. Total Física:
+          <input type="number" id="cadQtd" min="1" value="1">
+        </label>
+        <button class="b" onclick="cadastrarEquipamento()">Cadastrar Equipamento</button>
+      </div>
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Nome</th>
+              <th>Qtd. Total</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="eTb"></tbody>
+        </table>
+      </div>
+    </section>
 
-<div id="hist" class="hidden">
-<section>
-<h2>Devoluções e retiradas confirmadas</h2>
-<div class="row">
-<label>Tipo<select id="hTipo"><option value="">Todas</option><option value="Devolução">Devoluções</option><option value="Retirada">Retiradas</option></select></label>
-<label>Equipamento<select id="hEq"></select></label>
-<label>De<input id="hDe" type="date"></label>
-<label>Até<input id="hAte" type="date"></label>
-<label>Cliente ou telefone<input id="hCli" placeholder="Nome ou telefone"></label>
-<button class="b" id="hGo">Pesquisar</button>
-<button class="g" id="hClr">Limpar</button>
-</div>
-<small>Preencha só o que precisar e clique em Pesquisar. Campos em branco não filtram nada, e sem filtros aparecem todos os registros.</small>
-<div id="hOut"></div>
-</section>
-</div>
+    <!-- ABA 2: CONSULTA POR DATA -->
+    <section id="sec-1" class="hidden">
+      <h2>Consultar Disponibilidade por Período</h2>
+      <div class="row">
+        <label>Data Início:
+          <input type="date" id="cIni">
+        </label>
+        <label>Data Fim:
+          <input type="date" id="cFim">
+        </label>
+        <button class="b" onclick="consultarDisponibilidade()">Consultar Disponibilidade</button>
+      </div>
+      <div id="cRes" style="margin-top: 15px;"></div>
+    </section>
 
-<div id="man" class="hidden">
-<section>
-<h2>Registrar equipamento em manutenção</h2>
-<div class="row">
-<label>Equipamento<select id="mEq"></select></label>
-<label>Quantidade<input id="mQtd" type="number" min="1" value="1"></label>
-<label>Início<input id="mIni" type="date"></label>
-<label>Previsão de retorno (opcional)<input id="mFim" type="date"></label>
-<label>Motivo<input id="mMot" placeholder="Ex.: compressor com defeito"></label>
-<button class="b" id="mAdd">Registrar</button>
-</div>
-<div class="msg" id="mMsg" role="status"></div>
-<small>Enquanto estiver em manutenção, a unidade é descontada do estoque disponível. Ela volta a contar na data de retorno.</small>
-</section>
-<section>
-<h2>Equipamentos em manutenção</h2>
-<div id="mResumo" class="msg" style="margin:0 0 10px"></div>
-<div class="scroll"><table><thead><tr><th>Equipamento</th><th>Qtd</th><th>Período</th><th>Motivo</th><th>Situação</th><th></th></tr></thead><tbody id="mTb"></tbody></table></div>
-<div class="msg" id="mLst" role="status"></div>
-</section>
-</div>
+    <!-- ABA 3: NOVA SAÍDA EXTERNA -->
+    <section id="sec-2" class="hidden">
+      <h2>Registrar Saída / Reserva Externa</h2>
+      <div class="row">
+        <label>Cliente / Evento:
+          <input type="text" id="sCli" placeholder="Ex: Evento Corporativo X">
+        </label>
+        <label>Data Início:
+          <input type="date" id="sIni">
+        </label>
+        <label>Data Fim:
+          <input type="date" id="sFim">
+        </label>
+        <label>Tipo de Evento:
+          <select id="sTipo">
+            <option value="Locacao">Locação</option>
+            <option value="Reserva">Reserva</option>
+            <option value="Manutencao">Manutenção</option>
+          </select>
+        </label>
+      </div>
 
-<div id="eq" class="hidden">
-<section>
-<h2>Equipamentos e estoque</h2><p class="muted">Os números desta tabela são referentes a <b>hoje</b>. Manutenções futuras aparecem somente nas consultas dos períodos em que estarão ativas.</p>
-<div class="scroll"><table><thead><tr><th>Equipamento</th><th>Total</th><th>Disponível hoje</th><th>Alugado hoje</th><th>Manutenção hoje</th><th></th></tr></thead><tbody id="eTb"></tbody></table></div>
-<div class="row" style="margin-top:12px">
-<label>Novo equipamento<input id="eNome" placeholder="Ex.: Forno combinado"></label>
-<label>Quantidade total<input id="eTot" type="number" min="0" value="1"></label>
-<button class="b" id="eAdd">Adicionar</button>
-</div>
-<div class="msg" id="eMsg" role="status"></div>
-<label style="flex-direction:row;align-items:center;gap:8px;margin-top:14px"><input type="checkbox" id="cfgMd" style="width:auto"> Devolução libera o equipamento no mesmo dia (outra locação pode começar na data em que esta termina)</label>
-</section>
-</div>
-<div id="dados" class="hidden">
-<section>
-<h2>Backup dos dados</h2>
-<p style="margin:0 0 10px;color:var(--mut)">Os dados ficam salvos no banco local deste computador. Baixe um backup com frequência, principalmente antes de trocar de computador ou fazer manutenção no sistema.</p>
-<div id="bkInfo" class="msg" style="margin:0 0 10px"></div>
-<div class="row">
-<button class="b" id="bkExp">Exportar backup</button>
-<label>Importar backup (.json)<input type="file" id="bkFile" accept=".json,application/json"></label>
-</div>
-<div id="bkMsg" class="msg" style="white-space:pre-wrap" role="status"></div>
-<div id="bkAct" class="row" style="margin-top:8px"></div>
-<textarea id="bkTxt" class="hidden" readonly rows="6" style="width:100%;margin-top:8px;font:12px monospace;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px"></textarea>
-</section>
-<section>
-<h2>Importar planilha (CSV)</h2>
-<p style="margin:0 0 10px;color:var(--mut)">No Excel: Arquivo, Salvar como, CSV. Baixe os modelos para ver as colunas. Datas no formato dd/mm/aaaa. A importação de locações não bloqueia por falta de estoque, pois são locações que já existem.</p>
-<div class="row"><button class="g" id="mdEq">Baixar modelo de equipamentos</button><button class="g" id="mdLoc">Baixar modelo de locações</button></div>
-<div class="row" style="margin-top:12px">
-<label>Equipamentos (.csv)<input type="file" id="csvEq" accept=".csv,text/csv,.txt"></label>
-<label>Locações em andamento (.csv)<input type="file" id="csvLoc" accept=".csv,text/csv,.txt"></label>
-</div>
-<div id="csvMsg" class="msg" style="white-space:pre-wrap" role="status"></div>
-</section>
-</div>
+      <h3 style="margin-top: 20px;">Selecionar Equipamentos</h3>
+      <div class="row">
+        <label>Equipamento:
+          <select id="sEquip"></select>
+        </label>
+        <label>Qtd:
+          <input type="number" id="sQtd" min="1" value="1">
+        </label>
+        <button class="g" onclick="addItensSaida()">+ Adicionar Item</button>
+      </div>
 
-<small>Os dados ficam salvos no banco local deste computador. A data final da locação conta como dia de uso; o equipamento volta ao estoque no dia seguinte.</small>
+      <div id="sItensLista" style="margin-top: 15px;"></div>
+      <button class="b" style="margin-top: 15px;" onclick="salvarSaida()">Confirmar e Salvar Saída</button>
+    </section>
+
+    <!-- ABA 4: HISTÓRICO -->
+    <section id="sec-3" class="hidden">
+      <h2>Histórico Completo de Saídas</h2>
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Cliente / Evento</th>
+              <th>Tipo</th>
+              <th>Período</th>
+              <th>Status</th>
+              <th>Itens</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="hOut"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ABA 5: RESERVAS PRONTAS -->
+    <section id="sec-4" class="hidden">
+      <h2>Reservas Prontas para Saída</h2>
+      <div id="reservasProntasLista"></div>
+    </section>
+
+    <!-- ABA 6: LOCAÇÕES EM ANDAMENTO -->
+    <section id="sec-5" class="hidden">
+      <h2>Locações em Andamento (Em Campo)</h2>
+      <div id="locacoesAndamentoLista"></div>
+    </section>
+
+    <!-- ABA 7: RELATÓRIOS -->
+    <section id="sec-6" class="hidden">
+      <h2>Relatórios e Métricas</h2>
+      <div class="cols">
+        <div class="col">
+          <h3>Equipamentos</h3>
+          <p>Total de Modelos: <span id="rTotEquips" class="big">0</span></p>
+        </div>
+        <div class="col">
+          <h3>Saídas Ativas</h3>
+          <p>Locações / Reservas: <span id="rTotSaidas" class="big">0</span></p>
+        </div>
+      </div>
+    </section>
+  </div>
 </main>
+
 <script>
-const $=id=>document.getElementById(id);
-const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-let S={eq:[],loc:[]};
-let REV=0,salvando=false,pendente=false,bloqueado=false;
-const status=t=>{$("dbStatus").textContent=t};
-async function persistir(){
-  if(salvando){pendente=true;return}
-  salvando=true;
-  do{
-    pendente=false;
-    try{
-      const r=await fetch("/api/state",{method:"POST",headers:{"Content-Type":"application/json","X-Rev":String(REV)},body:JSON.stringify(S)});
-      if(r.status===409){bloqueado=true;status("Conflito: recarregue a página");alert("Os dados foram alterados em outra aba ou janela. Recarregue a página (F5) para não perder informações. As alterações desta tela NÃO foram salvas.");break}
-      if(!r.ok)throw new Error("HTTP "+r.status);
-      REV=(await r.json()).rev;
-      if(!pendente)status("Banco local: salvo");
-    }catch(e){console.error("Erro ao salvar:",e);status("ERRO ao salvar. Verifique o servidor");alert("Não foi possível salvar no banco. Verifique se o servidor (iniciar.bat) continua aberto. As últimas alterações podem não ter sido gravadas.");break}
-  }while(pendente);
-  salvando=false;
+// Lógica do Frontend (JavaScript)
+let token = localStorage.getItem('token') || '';
+let isCadastrando = false;
+let itensSaidaTemp = [];
+
+window.addEventListener('DOMContentLoaded', () => {
+  const hoje = new Date().toISOString().split('T')[0];
+  document.getElementById('cIni').value = hoje;
+  document.getElementById('cFim').value = hoje;
+  document.getElementById('sIni').value = hoje;
+  document.getElementById('sFim').value = hoje;
+
+  if (token) {
+    validarTokenEIniciar();
+  }
+});
+
+function toggleAuthMode(e) {
+  e.preventDefault();
+  isCadastrando = !isCadastrando;
+  document.getElementById('authTitle').innerText = isCadastrando ? 'Criar Nova Conta' : 'Entrar no Sistema';
+  document.getElementById('authBtn').innerText = isCadastrando ? 'Cadastrar' : 'Entrar';
+  document.getElementById('authToggleMsg').innerHTML = isCadastrando 
+    ? 'Já tem uma conta? <a href="#" onclick="toggleAuthMode(event)" style="color: var(--pri);">Entrar</a>' 
+    : 'Não tem uma conta? <a href="#" onclick="toggleAuthMode(event)" style="color: var(--pri);">Cadastre-se</a>';
 }
-function save(){
-  if(bloqueado){status("Conflito: recarregue a página");return}
-  status("Salvando…");persistir();
-}
-function renderTudo(){
-  fillSel();$("cfgMd").checked=S.cfg.mesmoDia;
-  renderLoc();renderEq();renderMan();renderBk();
-  if(edId&&!S.loc.some(x=>x.id===edId))fecharEd();
-}
-let diaAtual=hojeLocal();
-function virouDia(){
-  const h=hojeLocal();if(h===diaAtual)return;
-  const ant=diaAtual;diaAtual=h;
-  // só move os campos que ainda estão com o valor padrão do dia anterior
-  [["dDia",0],["nIni",0],["nFim",7],["mIni",0],["qIni",7],["qFim",14]].forEach(([i,n])=>{if($(i).value===add(ant,n))$(i).value=add(h,n)});
-  renderTudo();
-}
-const tick=()=>{virouDia()};
-window.addEventListener("beforeunload",e=>{if(salvando||pendente){e.preventDefault();e.returnValue=""}});
-async function load(){
-  try{
-    const r=await fetch("/api/state");
-    if(!r.ok) throw new Error("Falha ao carregar dados");
-    REV=+(r.headers.get("X-Rev")||0);
-    const data=await r.json();
-    if(data){
-      S=data;
-      S.man=S.man||[];
-      S.cfg=S.cfg||{mesmoDia:true};
+
+async function fazerAuth() {
+  const email = document.getElementById('authEmail').value;
+  const password = document.getElementById('authPass').value;
+  const fb = document.getElementById('authFeedback');
+  fb.innerText = '';
+
+  if (!email || !password) {
+    fb.innerText = 'Preencha e-mail e senha.';
+    fb.className = 'msg bad';
+    return;
+  }
+
+  const endpoint = isCadastrando ? '/api/register' : '/api/login';
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      fb.innerText = data.error || 'Erro na operação.';
+      fb.className = 'msg bad';
       return;
     }
-  }catch(e){alert("Não foi possível conectar ao banco local. Verifique se o servidor está funcionando.");throw e}
-  S={eq:[],loc:[],man:[],cfg:{mesmoDia:true}};
-}
-function iso(d){return d.toISOString().slice(0,10)}
-function hojeLocal(){const d=new Date(),z=n=>String(n).padStart(2,"0");return d.getFullYear()+"-"+z(d.getMonth()+1)+"-"+z(d.getDate())}
-function add(s,n){const d=new Date(s+"T00:00:00Z");d.setUTCDate(d.getUTCDate()+n);return iso(d)}
-function fmt(s){return s.split("-").reverse().join("/")}
-function span(a,b){const r=[];for(let d=a;d<=b;d=add(d,1))r.push(d);return r}
-const eqName=id=>(S.eq.find(e=>e.id==id)||{nome:"?"}).nome;
-function emMan(id,day){
- return (S.man||[]).reduce((t,m)=>{
-   const ativa=String(m.eq)===String(id)
-     && String(m.ini||"")<=String(day||"")
-     && (!m.ret || String(m.ret)>String(day||""));
-   return t+(ativa?(Number(m.qtd)||0):0);
- },0);
-}
-const total=(id,day)=>{const b=(S.eq.find(e=>e.id==id)||{total:0}).total;return b};
-function used(id,day,skip,ext){return S.loc.reduce((s,l)=>{if(l.eq!=id||l.id===skip)return s;const fim=ext&&ext(l)||l.fim;return s+(l.ini<=day&&(day<fim||(day===fim&&(!S.cfg.mesmoDia||l.ini===fim)))?l.qtd:0)},0)}
-function dias(a,b){return S.cfg.mesmoDia&&b>a?span(a,add(b,-1)):span(a,b)}
-function avail(id,a,b,skip){return dias(a,b).map(d=>({d,v:total(id,d)-emMan(id,d)-used(id,d,skip)}))}
-function ranges(arr){const out=[];arr.forEach(x=>{const l=out[out.length-1];if(l&&l.v===x.v&&add(l.b,1)===x.d)l.b=x.d;else out.push({a:x.d,b:x.d,v:x.v})});return out}
-function fillSel(){const o=S.eq.map(e=>`<option value="${e.id}">${esc(e.nome)}</option>`).join("");["qEq","nEq","edEq","mEq"].forEach(i=>{const v=$(i).value;$(i).innerHTML=o;if(v)$(i).value=v});const hv=$("hEq").value;$("hEq").innerHTML='<option value="">Todos</option>'+o;$("hEq").value=hv}
 
-function consultar(){
- const id=+$("qEq").value,q=+$("qQtd").value,a=$("qIni").value,b=$("qFim").value,o=$("qOut");
- if(!a||!b||b<a||q<1){o.innerHTML='<div class="box warn">Informe o equipamento, a quantidade e um período válido.</div>';return}
-
- const diasConsulta=dias(a,b);
- const saldo=diasConsulta.map(d=>({
-   d,
-   total:total(id,d),
-   alugado:used(id,d),
-   manut:emMan(id,d),
-   disponivel:Math.max(0,total(id,d)-used(id,d)-emMan(id,d))
- }));
- const min=Math.min(...saldo.map(x=>x.disponivel));
- const tot=total(id);
- const locMax=Math.max(...saldo.map(x=>x.alugado),0);
- const manMax=Math.max(...saldo.map(x=>x.manut),0);
- const full=span(a,b).map(d=>({
-   d,
-   v:Math.max(0,total(id,d)-used(id,d)-emMan(id,d))
- }));
- const naJanela=S.loc.filter(l=>l.eq==id&&l.ini<=b&&l.fim>=a)
-   .sort((x,y)=>x.ini.localeCompare(y.ini));
-
- // Cenário conservador: locações ainda não confirmadas que terminam dentro
- // da janela são tratadas como se fossem renovadas até o fim da consulta.
- const h0=hojeLocal();
- const risco=S.loc.filter(l=>l.eq==id&&!l.conf&&l.fim>=h0&&l.fim<b);
- const cons=Math.min(...diasConsulta.map(d=>
-   Math.max(0,total(id,d)-used(id,d,null,l=>
-     !l.conf&&l.fim>=h0&&l.fim<b?b:l.fim)-emMan(id,d))
- ));
- const cond=min>=q&&cons<q;
- const cls=min<q?"bad":cond?"warn":"ok";
-
- let h=`<div class="box ${cls}">
-   <div class="big">${min<q?"Indisponível":cond?"Disponível, com ressalvas":"Disponível"}</div>`;
-
- if(min<q){
-   h+=`Não atende <b>${q} unidade(s)</b> durante todo o período. O menor saldo disponível é <b>${Math.max(min,0)}</b>.`;
- }else if(cond){
-   h+=`Há <b>${q} unidade(s)</b> disponíveis de ${fmt(a)} a ${fmt(b)}, mas parte dessa disponibilidade depende de devoluções no prazo. Se alguma locação for renovada, o saldo poderá cair para <b>${Math.max(cons,0)}</b>.`;
- }else{
-   h+=`Dá para atender <b>${q} unidade(s)</b> de ${fmt(a)} a ${fmt(b)}, mesmo considerando as locações existentes e os equipamentos em manutenção.`;
- }
- h+="</div>";
-
- const st=(n,t,c)=>`<div class="box ${c}" style="margin:0;border:1px solid var(--line)">
-   <div class="big">${n}</div>${t}</div>`;
-
- h+=`<div class="row" style="align-items:stretch;margin-top:12px">
-   ${st(tot,"total em estoque","")}
-   ${st(Math.max(min,0),"disponíveis durante todo o período","ok")}
-   ${st(locMax,"alugados (máximo no período)","warn")}
-   ${st(manMax,"em manutenção (máximo no período)","bad")}
- </div>`;
-
- h+=`<h2 style="margin-top:14px">Locações no período (${naJanela.length})</h2>`+
-   (naJanela.length?
-    `<div class="scroll"><table><thead><tr><th>Cliente</th><th>Qtd</th><th>Período</th><th>Situação</th></tr></thead><tbody>`+
-    naJanela.map(l=>`<tr>
-      <td><b>${esc(l.cliente)}</b>${l.tel?`<br><small>${esc(l.tel)}</small>`:""}</td>
-      <td>${l.qtd}</td>
-      <td>${fmt(l.ini)} a ${fmt(l.fim)}</td>
-      <td>${l.conf?l.conf.tipo+" confirmada":l.ini>h0?"Reservada":"Em andamento"}</td>
-    </tr>`).join("")+
-    `</tbody></table></div>`
-    :" <small>Nenhuma locação neste período.</small>");
-
- h+=`<h2 style="margin-top:14px">Disponibilidade por período</h2>
-   <div class="scroll"><table><thead><tr>
-   <th>Período</th><th>Disponível</th><th>Alugado</th><th>Manutenção</th>
-   </tr></thead><tbody>`;
-
- // Agrupa somente pela combinação dos três valores, para a leitura ficar objetiva.
- const detalhado=[];
- saldo.forEach(x=>{
-   const ultimo=detalhado[detalhado.length-1];
-   if(ultimo&&ultimo.disponivel===x.disponivel&&ultimo.alugado===x.alugado&&ultimo.manut===x.manut&&add(ultimo.b,1)===x.d){
-     ultimo.b=x.d;
-   }else{
-     detalhado.push({a:x.d,b:x.d,disponivel:x.disponivel,alugado:x.alugado,manut:x.manut});
-   }
- });
- h+=detalhado.map(r=>`<tr>
-   <td>${r.a===r.b?fmt(r.a):fmt(r.a)+" a "+fmt(r.b)}</td>
-   <td><b>${r.disponivel}</b></td>
-   <td>${r.alugado}</td>
-   <td>${r.manut}</td>
- </tr>`).join("")+`</tbody></table></div>`;
-
- if(risco.length){
-   h+=`<h2 style="margin-top:14px">${cond?'Devoluções que impactam a disponibilidade':'Devoluções previstas até o fim do período'}</h2>
-   <div class="scroll"><table><thead><tr><th>Cliente</th><th>Qtd</th><th>Devolve em</th><th>Ação</th></tr></thead><tbody>`+
-   risco.map(l=>`<tr>
-     <td><b>${esc(l.cliente)}</b>${l.tel?`<br><small>${esc(l.tel)}</small>`:""}</td>
-     <td>${l.qtd}</td>
-     <td>${fmt(l.fim)}</td>
-     <td>Confirmar com o cliente</td>
-   </tr>`).join("")+
-   `</tbody></table></div>`;
- }
-
- if(min>=q){
-   h+=`<div class="row" style="margin-top:12px">
-     <label>Reservar para o cliente<input id="rCli" placeholder="Nome do cliente"></label>
-     <label>Telefone<input id="rTel" type="tel"></label>
-     <label>Quantidade<input id="rQtd" type="number" min="1" max="${Math.max(min,1)}" value="${Math.min(q,min)}" style="min-width:90px"></label>
-     <button class="b" id="rGo">${cond?'Reservar com ressalva':'Reservar'} <span id="rQtdTxt">${Math.min(q,min)}</span> un.</button>
-   </div>
-   <div class="msg" id="rMsg"></div>`;
- }
-
- o.innerHTML=h;
-
- if($("rQtd")){
-   const atualizarQtd=()=>{
-     let v=parseInt($("rQtd").value,10)||1;
-     v=Math.max(1,Math.min(v,min));
-     $("rQtd").value=v;
-     $("rQtdTxt").textContent=v;
-   };
-   $("rQtd").oninput=atualizarQtd;
-   $("rQtd").onchange=atualizarQtd;
- }
-
- if($("rGo"))$("rGo").onclick=()=>{
-   const c=$("rCli").value.trim();
-   if(!c){$("rMsg").textContent="Informe o nome do cliente.";return}
-   const rq=Math.max(1,Math.min(parseInt($("rQtd").value,10)||1,min));
-   S.loc.push({
-     id:Date.now(),eq:id,cliente:c,tel:$("rTel").value.trim(),
-     qtd:rq,ini:a,fim:b
-   });
-   save();renderLoc();consultar();
-   $("rMsg").textContent="Reserva registrada.";
- };
+    if (isCadastrando) {
+      fb.innerText = 'Conta criada com sucesso! Faça login.';
+      fb.className = 'msg ok';
+      toggleAuthMode(new Event('click'));
+    } else {
+      token = data.token;
+      localStorage.setItem('token', token);
+      iniciarAplicacao(data.user);
+    }
+  } catch (err) {
+    fb.innerText = 'Erro ao conectar ao servidor.';
+    fb.className = 'msg bad';
+  }
 }
 
-function deps(l){ // devoluções ainda não confirmadas de que esta reserva depende
- const h0=hojeLocal();if(l.conf||l.ini<h0)return [];
- const ext=x=>!x.conf&&x.fim>=h0&&x.fim<l.fim?l.fim:x.fim;
- if(!dias(l.ini,l.fim).some(d=>total(l.eq,d)-emMan(l.eq,d)-used(l.eq,d,l.id,ext)<l.qtd))return [];
- return S.loc.filter(x=>x.eq==l.eq&&x.id!==l.id&&!x.conf&&x.fim>=h0&&x.fim<l.fim)}
-const nomes=(L,r)=>L.map(x=>esc(x.cliente)+" ("+fmt(x.fim)+(r&&x.fim===r.ini?", mesmo dia do início":"")+")").join(", ");
-function notaSai(l){const dp=deps(l),m=S.loc.filter(x=>x.eq==l.eq&&x.id!==l.id&&x.fim===l.ini&&!x.conf);
- return dp.length?`<div><span class="tag warn">Depende da devolução de ${nomes(dp,l)}</span></div>`:m.length?`<div><small>Mesmo dia: devolução de ${m.map(x=>esc(x.cliente)).join(", ")}</small></div>`:""}
-function notaVol(l){const m=S.loc.filter(x=>x.eq==l.eq&&x.id!==l.id&&x.ini===l.fim);
- return m.length?`<div><small>Mesmo dia: sai para ${m.map(x=>esc(x.cliente)).join(", ")}</small></div>`:""}
-function renderDia(){
- const d=$("dDia").value,h0=hojeLocal();if(!d)return;
- const sai=S.loc.filter(l=>l.ini===d),vol=S.loc.filter(l=>l.fim===d),atr=d===h0?S.loc.filter(l=>!l.conf&&l.fim<h0):[];
- const it=(l,x)=>`<div class="it"><b>${l.qtd}× ${esc(eqName(l.eq))}</b><br><small><b>${esc(l.cliente)}</b>${l.tel?" · "+l.tel:""}${x&&x.per?" · até "+fmt(l.fim):""}${x&&x.atr?" · devolução prevista "+fmt(l.fim):""}</small>${x&&x.b||""}</div>`;
- const btn=l=>l.conf?`<div><span class="tag ok">✔ ${l.conf.tipo} confirmada</span></div>`:`<div style="margin-top:4px"><button class="g" data-vc="${l.id}|Devolução">Devolução confirmada</button> <button class="g" data-vc="${l.id}|Retirada">Retirada confirmada</button></div>`;
- const col=(t,c,list,vazio)=>`<div class="col"><h3>${t} (${list.length})</h3>${c.length?c.join(""):"<small>"+vazio+"</small>"}</div>`;
- let h=col("Saem do estoque",sai.map(l=>it(l,{per:1,b:notaSai(l)})),sai,"Nenhuma saída neste dia.");
- h+=col("Voltam ao estoque",vol.map(l=>it(l,{b:notaVol(l)+btn(l)})),vol,"Nenhuma devolução ou retirada neste dia.");
- if(atr.length)h+=`<div class="col bad"><h3>Em atraso (${atr.length})</h3>${atr.map(l=>it(l,{atr:1,b:btn(l)})).join("")}</div>`;
- $("dOut").innerHTML=h;
+function validarTokenEIniciar() {
+  iniciarAplicacao({ email: 'Usuário Conectado' });
 }
-const norm=x=>x.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
-let hBuscou=false;
-function renderHist(){
- if(!hBuscou){$("hOut").innerHTML="";return}
- const t=$("hTipo").value,e=$("hEq").value,de=$("hDe").value,ate=$("hAte").value,c=norm($("hCli").value.trim());
- const L=S.loc.filter(l=>l.conf&&(!t||l.conf.tipo===t)&&(!e||l.eq==e)&&(!de||l.conf.data>=de)&&(!ate||l.conf.data<=ate)&&(!c||norm(l.cliente+" "+(l.tel||"")).includes(c))).sort((x,y)=>y.conf.data.localeCompare(x.conf.data));
- $("hOut").innerHTML=`<div class="msg">${L.length} registro(s)</div>`+(L.length?`<div class="scroll"><table><thead><tr><th>Data</th><th>Tipo</th><th>Equipamento</th><th>Qtd</th><th>Cliente</th><th>Telefone</th><th>Período da locação</th></tr></thead><tbody>${L.map(l=>`<tr><td>${fmt(l.conf.data)}</td><td>${l.conf.tipo}</td><td>${esc(eqName(l.eq))}</td><td>${l.qtd}</td><td>${esc(l.cliente)}</td><td>${esc(l.tel||"-")}</td><td>${fmt(l.ini)} a ${fmt(l.fim)}</td></tr>`).join("")}</tbody></table></div>`:"<small>Nenhuma devolução ou retirada confirmada com esses filtros.</small>");
+
+function iniciarAplicacao(user) {
+  document.getElementById('authArea').classList.add('hidden');
+  document.getElementById('appArea').classList.remove('hidden');
+  document.getElementById('userDisplay').innerText = user.email;
+  carregarEquipamentos();
+  carregarHistorico();
 }
-let edId=null;
-function abrirEd(id){const l=S.loc.find(x=>x.id==id);if(!l)return;edId=l.id;
- $("edEq").value=l.eq;$("edCli").value=l.cliente;$("edTel").value=l.tel||"";$("edQtd").value=l.qtd;$("edIni").value=l.ini;$("edFim").value=l.fim;
- $("edUndo").classList.toggle("hidden",!l.conf);$("edMsg").textContent="";$("edSec").classList.remove("hidden");
- $("edSec").scrollIntoView({behavior:"smooth",block:"start"});$("edCli").focus()}
-function fecharEd(){edId=null;$("edSec").classList.add("hidden")}
-function renderMan(){
- const h0=hojeLocal(),st=m=>m.ret&&m.ret<=h0?"Concluída":m.ini>h0?"Agendada":"Em manutenção";
- const L=[...S.man].sort((x,y)=>(st(x)==="Concluída")-(st(y)==="Concluída")||y.ini.localeCompare(x.ini));
- const hoje=S.eq.filter(e=>emMan(e.id,h0)>0).map(e=>`<b>${esc(e.nome)}</b>: ${emMan(e.id,h0)} de ${e.total}`).join(" · ");
- $("mResumo").innerHTML=hoje?"Em manutenção hoje: "+hoje:"Nenhum equipamento em manutenção hoje.";
- $("mTb").innerHTML=L.length?L.map(m=>{const t=st(m);return `<tr><td><b>${esc(eqName(m.eq))}</b></td><td>${m.qtd}</td><td>${fmt(m.ini)} ${m.ret?"· retorna em "+fmt(m.ret):"· sem previsão de retorno"}</td><td>${esc(m.motivo||"-")}</td><td><span class="tag ${t==="Concluída"?"ok":t==="Agendada"?"warn":"bad"}">${t}</span></td><td>${t==="Concluída"?"":`<input type="date" id="mr${m.id}" value="${h0}" style="width:150px"> <button class="g" data-mr="${m.id}">Voltou ao estoque</button> `}<button class="g d" data-mx="${m.id}">Excluir</button></td></tr>`}).join(""):'<tr><td colspan="6">Nenhuma manutenção registrada.</td></tr>';
- $("mTb").querySelectorAll("[data-mr]").forEach(b=>b.onclick=()=>{const m=S.man.find(x=>x.id==b.dataset.mr),d=$("mr"+m.id).value;
-  if(!d){$("mLst").textContent="Informe a data de retorno.";return}
-  m.ret=d;save();renderMan();renderLoc();$("mLst").textContent=`${m.qtd} un. de ${eqName(m.eq)} voltam ao estoque em ${fmt(d)}.`});
- $("mTb").querySelectorAll("[data-mx]").forEach(b=>b.onclick=()=>{S.man=S.man.filter(x=>x.id!=b.dataset.mx);save();renderMan();renderLoc();$("mLst").textContent="Manutenção excluída. O estoque foi recalculado."});
+
+function fazerLogout() {
+  token = '';
+  localStorage.removeItem('token');
+  document.getElementById('appArea').classList.add('hidden');
+  document.getElementById('authArea').classList.remove('hidden');
 }
-function renderLoc(){
- renderDia();renderHist();
- const rows=[...S.loc].sort((x,y)=>x.ini.localeCompare(y.ini));
- $("lTb").innerHTML=rows.length?rows.map(l=>`<tr><td>${esc(eqName(l.eq))}</td><td><b>${esc(l.cliente)}</b>${l.tel?`<br><small>${esc(l.tel)}</small>`:""}${deps(l).length?` <span class="warn" style="padding:2px 6px;border-radius:4px;font-size:12px">depende da devolução de ${nomes(deps(l),l)}</span>`:''}</td><td>${l.qtd}</td><td>${fmt(l.ini)} a ${fmt(l.fim)}</td>
- <td>${l.conf?`<span class="ok" style="padding:3px 8px;border-radius:4px">✔ ${l.conf.tipo} confirmada em ${fmt(l.conf.data)}</span>`:`<input type="date" id="rn${l.id}" min="${add(l.fim,1)}" style="width:150px"> <button class="g" data-r="${l.id}">Renovar</button>`}</td>
- <td>${l.conf?"":`<input type="date" id="cf${l.id}" value="${l.fim}" style="width:150px"> <button class="g" data-c="${l.id}|Devolução">Devolução confirmada</button> <button class="g" data-c="${l.id}|Retirada">Retirada confirmada</button> `}<button class="g" data-e="${l.id}">Editar</button> <button class="g d" data-x="${l.id}">Excluir</button></td></tr>`).join(""):'<tr><td colspan="6">Nenhuma locação. Registre a primeira na aba Nova locação.</td></tr>';
- $("lTb").querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{
-  const l=S.loc.find(x=>x.id==b.dataset.r),n=$("rn"+l.id).value;
-  if(!n||n<=l.fim){$("lMsg").textContent="Escolha uma data posterior ao fim atual.";return}
-  const falta=avail(l.eq,l.fim,n,l.id).filter(x=>x.v<l.qtd);
-  l.fim=n;save();renderLoc();
-  $("lMsg").textContent=falta.length?`Renovado até ${fmt(n)}, mas faltam unidades a partir de ${fmt(falta[0].d)}. Revise as reservas.`:`Renovado até ${fmt(n)}. O estoque futuro foi atualizado.`});
- $("lTb").querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{
-  const [id,tipo]=b.dataset.c.split("|"),l=S.loc.find(x=>x.id==id),d=$("cf"+id).value;
-  if(!d||d<l.ini){$("lMsg").textContent="Informe a data real, a partir do início da locação.";return}
-  l.fim=d;l.conf={tipo,data:d};save();renderLoc();
-  $("lMsg").textContent=`${tipo} confirmada. ${l.qtd} un. de ${eqName(l.eq)} livres a partir de ${fmt(add(d,1))}.`});
- $("lTb").querySelectorAll("[data-e]").forEach(b=>b.onclick=()=>abrirEd(b.dataset.e));
- $("lTb").querySelectorAll("[data-x]").forEach(b=>b.onclick=()=>{S.loc=S.loc.filter(x=>x.id!=b.dataset.x);save();renderLoc();$("lMsg").textContent="Locação excluída."});
+
+function mudaAba(idx) {
+  for (let i = 0; i <= 6; i++) {
+    document.getElementById(`sec-${i}`).classList.add('hidden');
+    document.getElementById(`tab-${i}`).setAttribute('aria-selected', 'false');
+  }
+  document.getElementById(`sec-${idx}`).classList.remove('hidden');
+  document.getElementById(`tab-${idx}`).setAttribute('aria-selected', 'true');
+
+  if (idx === 4) carregarReservasProntas();
+  if (idx === 5) carregarLocacoesAndamento();
+  if (idx === 6) carregarRelatorios();
 }
-function estoqueComprometidoMax(id){
- const h0=hojeLocal(),datas=[];
- S.loc.filter(l=>l.eq==id&&l.fim>=h0).forEach(l=>{datas.push(l.ini,l.fim)});
- S.man.filter(m=>m.eq==id&&(!m.ret||m.ret>=h0)).forEach(m=>{datas.push(m.ini);if(m.ret)datas.push(add(m.ret,-1))});
- const fim=datas.length?datas.reduce((a,b)=>a>b?a:b,h0):h0;
- let max=0;
- for(const d of span(h0,fim)){max=Math.max(max,used(id,d)+emMan(id,d))}
- return max;
+
+async function carregarEquipamentos() {
+  try {
+    const res = await fetch('/api/equipamentos', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    
+    const tbody = document.getElementById('eTb');
+    const select = document.getElementById('sEquip');
+    tbody.innerHTML = '';
+    select.innerHTML = '';
+
+    data.forEach(eq => {
+      tbody.innerHTML += `
+        <tr>
+          <td>${eq.codigo}</td>
+          <td>${eq.nome}</td>
+          <td>${eq.quantidade_total}</td>
+          <td>
+            <button class="g d" onclick="deletarEquipamento('${eq.id}')">Excluir</button>
+          </td>
+        </tr>
+      `;
+      select.innerHTML += `<option value="${eq.id}">${eq.codigo} - ${eq.nome}</option>`;
+    });
+
+    document.getElementById('rTotEquips').innerText = data.length;
+  } catch (err) {
+    console.error(err);
+  }
 }
-function renderEq(){
- const tb=$("eTb");
- if(!tb)return;
- S.eq=Array.isArray(S.eq)?S.eq:[];
- S.loc=Array.isArray(S.loc)?S.loc:[];
- S.man=Array.isArray(S.man)?S.man:[];
- const h0=hojeLocal();
 
- tb.innerHTML=S.eq.map(e=>{
-   const total=Number(e.total)||0;
-   const alug=Number(used(e.id,h0))||0;
-   const man=Number(emMan(e.id,h0))||0;
-   const disp=Math.max(0,total-alug-man);
+async function cadastrarEquipamento() {
+  const codigo = document.getElementById('cadCod').value;
+  const nome = document.getElementById('cadNome').value;
+  const quantidade_total = parseInt(document.getElementById('cadQtd').value);
 
-   return `<tr>
-     <td><b>${esc(e.nome)}</b></td>
-     <td><input type="number" min="0" value="${total}" data-t="${e.id}" style="width:80px" title="Não pode ficar abaixo do estoque já comprometido"></td>
-     <td><b>${disp}</b></td>
-     <td>${alug}</td>
-     <td>${man}</td>
-     <td><button class="g d" data-d="${e.id}">Remover</button></td>
-   </tr>`;
- }).join("");
+  if (!codigo || !nome || isNaN(quantidade_total)) {
+    alert('Preencha todos os campos!');
+    return;
+  }
 
- tb.querySelectorAll("[data-t]").forEach(i=>i.onchange=()=>{
-   const e=S.eq.find(x=>String(x.id)===String(i.dataset.t));
-   if(!e)return;
+  await fetch('/api/equipamentos', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({ codigo, nome, quantidade_total })
+  });
 
-   const novo=Math.max(0,Math.floor(Number(i.value)||0));
-   const min=estoqueComprometidoMax(e.id);
-
-   if(novo<min){
-     i.value=e.total;
-     $("eMsg").textContent=`Não é possível reduzir ${e.nome} para ${novo} unidade(s). O sistema já tem ${min} unidade(s) comprometidas por locações/manutenções.`;
-     return;
-   }
-
-   e.total=novo;
-   save();
-   renderEq();
-   renderLoc();
-   renderMan();
-   $("eMsg").textContent=`Estoque de ${e.nome} atualizado para ${novo} unidade(s).`;
- });
-
- tb.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>{
-   const id=Number(b.dataset.d);
-   const e=S.eq.find(x=>Number(x.id)===id);
-   if(!e)return;
-
-   if(S.loc.some(l=>Number(l.eq)===id)||S.man.some(m=>Number(m.eq)===id)){
-     $("eMsg").textContent=`Não é possível remover ${e.nome} porque existem locações ou manutenções vinculadas a ele.`;
-     return;
-   }
-
-   if(!confirm(`Remover o equipamento "${e.nome}" do cadastro?`))return;
-
-   S.eq=S.eq.filter(x=>Number(x.id)!==id);
-   save();
-   renderEq();
-   fillSel();
-   $("eMsg").textContent=`${e.nome} removido do cadastro.`;
- });
+  document.getElementById('cadCod').value = '';
+  document.getElementById('cadNome').value = '';
+  document.getElementById('cadQtd').value = '1';
+  carregarEquipamentos();
 }
-$("nAdd").onclick=()=>{
- const id=+$("nEq").value,c=$("nCli").value.trim(),q=+$("nQtd").value,a=$("nIni").value,b=$("nFim").value,m=$("nMsg");
- if(!c||!a||!b||b<a||q<1){m.textContent="Preencha cliente, quantidade e um período válido.";return}
- const min=Math.min(...avail(id,a,b).map(x=>x.v));
- if(min<q){m.textContent=`Sem estoque: só ${Math.max(min,0)} unidade(s) livres em todo o período.`;return}
- S.loc.push({id:Date.now(),eq:id,cliente:c,tel:$("nTel").value.trim(),qtd:q,ini:a,fim:b});save();renderLoc();m.textContent="Locação registrada.";
-};
-$("eAdd").onclick=()=>{
- const n=$("eNome").value.trim(),q=Math.max(0,Math.floor(+$("eTot").value||0)),m=$("eMsg");
- if(!n){m.textContent="Informe o nome do equipamento.";return}
- if(!q){m.textContent="Informe uma quantidade total maior que zero.";return}
- if(S.eq.some(e=>nrm(e.nome)===nrm(n))){m.textContent="Já existe um equipamento com esse nome.";return}
- S.eq.push({id:Date.now(),nome:n,total:q});$("eNome").value="";$("eTot").value=1;save();renderEq();fillSel();m.textContent=`${n} adicionado com ${q} unidade(s).`;
-};
-$("qGo").onclick=consultar;
-// ---- backup e importação
-async function baixar(filename,data){
-  try{
-    const blob=new Blob([data],{type:"application/octet-stream;charset=utf-8"});
-    const url=URL.createObjectURL(blob),a=document.createElement("a");
-    a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
-    setTimeout(()=>URL.revokeObjectURL(url),1000);
-    return "ok";
-  }catch(e){console.error(e);return "erro"}
+
+async function deletarEquipamento(id) {
+  if (!confirm('Deseja realmente excluir este equipamento?')) return;
+  await fetch(`/api/equipamentos/${id}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  carregarEquipamentos();
 }
-async function lerTexto(f){const buf=await f.arrayBuffer();try{return new TextDecoder("utf-8",{fatal:true}).decode(buf)}catch(e){return new TextDecoder("windows-1252").decode(buf)}}
-function parseCSV(t){t=t.replace(/^\uFEFF/,"");const f=t.split(/\r?\n/)[0]||"",sep=f.includes(";")?";":f.includes("\t")?"\t":",";
- const rows=[];let r=[],c="",q=false;
- for(let i=0;i<t.length;i++){const ch=t[i];
-  if(q){if(ch==='"'){if(t[i+1]==='"'){c+='"';i++}else q=false}else c+=ch}
-  else if(ch==='"')q=true;else if(ch===sep){r.push(c);c=""}
-  else if(ch==="\n"||ch==="\r"){if(ch==="\r"&&t[i+1]==="\n")i++;r.push(c);rows.push(r);r=[];c=""}else c+=ch}
- if(c!==""||r.length){r.push(c);rows.push(r)}
- return rows.filter(x=>x.some(v=>v.trim()!==""))}
-function pd(v){v=(v||"").trim();let m=v.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/),x=null;
- if(m){let y=+m[3];if(y<100)y+=2000;x=y+"-"+m[2].padStart(2,"0")+"-"+m[1].padStart(2,"0")}else if(/^\d{4}-\d{2}-\d{2}$/.test(v))x=v;
- return x&&iso(new Date(x+"T00:00:00Z"))===x?x:null}
-function renderBk(){const b=S.cfg.bk,d=b?Math.floor((Date.now()-new Date(b))/864e5):null;
- $("bkInfo").innerHTML=b?`Último backup: <b>${new Date(b).toLocaleString("pt-BR")}</b>${d>=7?` <span class="tag warn">há ${d} dias, faça um novo</span>`:""}`:`<span class="tag warn">Nenhum backup feito ainda</span>`}
-$("bkExp").onclick=async()=>{const nome=`backup-estoque-${hojeLocal()}.json`,txt=JSON.stringify({versao:1,exportado:new Date().toISOString(),dados:S},null,1),m=$("bkMsg");
- const r=await baixar(nome,txt);
- if(r==="ok"){S.cfg.bk=new Date().toISOString();save();renderBk();m.textContent="Backup exportado. Guarde o arquivo em um local seguro.";$("bkTxt").classList.add("hidden")}
- else if(r==="declined")m.textContent="Download cancelado.";
- else{m.textContent="O download direto não está disponível aqui. Copie o texto abaixo e salve em um arquivo .json.";$("bkTxt").value=txt;$("bkTxt").classList.remove("hidden")}};
-let bkPend=null;
-$("bkFile").onchange=async()=>{const f=$("bkFile").files[0],m=$("bkMsg");$("bkAct").innerHTML="";bkPend=null;if(!f)return;
- try{const o=JSON.parse(await lerTexto(f)),d=o&&o.dados||o;
-  if(!d||!Array.isArray(d.eq)||!Array.isArray(d.loc))throw 0;
-  bkPend=d;m.textContent=`Arquivo válido: ${d.eq.length} equipamento(s), ${d.loc.length} locação(ões), ${(d.man||[]).length} manutenção(ões).\nIsso substitui todos os dados atuais.`;
-  $("bkAct").innerHTML='<button class="b" id="bkOk">Substituir dados atuais</button><button class="g" id="bkNo">Cancelar</button>';
-  $("bkOk").onclick=()=>{S=bkPend;S.man=S.man||[];S.cfg=S.cfg||{mesmoDia:true};bkPend=null;save();fecharEd();fillSel();renderLoc();renderEq();renderMan();renderBk();$("cfgMd").checked=S.cfg.mesmoDia;$("bkAct").innerHTML="";m.textContent="Backup importado. Os dados foram restaurados."};
-  $("bkNo").onclick=()=>{bkPend=null;$("bkAct").innerHTML="";m.textContent="Importação cancelada."}
- }catch(e){m.textContent="Não foi possível ler este arquivo. Use um backup .json exportado por esta ferramenta."}
- $("bkFile").value=""};
-$("mdEq").onclick=()=>baixar("modelo-equipamentos.csv","\uFEFFnome;quantidade\nFreezer horizontal;4\nForno combinado;2\n").then(r=>{if(r==="indisp")$("csvMsg").textContent="Download indisponível aqui. Crie um CSV com as colunas: nome;quantidade."});
-$("mdLoc").onclick=()=>baixar("modelo-locacoes.csv","\uFEFFequipamento;cliente;telefone;quantidade;inicio;fim\nFreezer horizontal;Buffet Aurora;(11) 90000-0000;2;01/10/2026;10/10/2026\n").then(r=>{if(r==="indisp")$("csvMsg").textContent="Download indisponível aqui. Crie um CSV com as colunas: equipamento;cliente;telefone;quantidade;inicio;fim."});
-const nrm=x=>x.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
-$("csvEq").onchange=async()=>{const f=$("csvEq").files[0],m=$("csvMsg");if(!f)return;
- try{let R=parseCSV(await lerTexto(f));if(R.length&&isNaN(Number(R[0][1])))R.shift();
-  let novos=0,atual=0;const err=[];
-  R.forEach((r,i)=>{const n=(r[0]||"").trim(),q=Number((r[1]||"").trim());
-   if(!n||!Number.isInteger(q)||q<0){err.push(`Linha ${i+1}: nome ou quantidade inválidos`);return}
-   const e=S.eq.find(x=>nrm(x.nome)===nrm(n));
-   if(e){e.total=q;atual++}else{S.eq.push({id:Date.now()+i,nome:n,total:q});novos++}});
-  save();renderEq();fillSel();renderLoc();renderMan();
-  m.textContent=`Equipamentos: ${novos} novo(s), ${atual} atualizado(s), ${err.length} com erro.`+(err.length?"\n"+err.slice(0,8).join("\n"):"")
- }catch(e){m.textContent="Não foi possível ler o arquivo."}
- $("csvEq").value=""};
-$("csvLoc").onchange=async()=>{const f=$("csvLoc").files[0],m=$("csvMsg");if(!f)return;
- try{let R=parseCSV(await lerTexto(f));if(R.length&&isNaN(Number(R[0][3])))R.shift();
-  let ok=0,dup=0;const err=[];
-  R.forEach((r,i)=>{const [en,cl,tel,qs,ia,fa]=r.map(v=>(v||"").trim()),q=Number(qs),a=pd(ia),b=pd(fa),e=S.eq.find(x=>nrm(x.nome)===nrm(en));
-   if(!e){err.push(`Linha ${i+1}: equipamento "${en}" não cadastrado`);return}
-   if(!cl){err.push(`Linha ${i+1}: cliente em branco`);return}
-   if(!Number.isInteger(q)||q<1){err.push(`Linha ${i+1}: quantidade inválida`);return}
-   if(!a||!b||b<a){err.push(`Linha ${i+1}: datas inválidas (use dd/mm/aaaa)`);return}
-   if(S.loc.some(l=>l.eq===e.id&&l.cliente===cl&&l.qtd===q&&l.ini===a&&l.fim===b)){dup++;return}
-   S.loc.push({id:Date.now()+i,eq:e.id,cliente:cl,tel,qtd:q,ini:a,fim:b});ok++});
-  save();renderLoc();
-  m.textContent=`Locações: ${ok} importada(s), ${dup} repetida(s) ignorada(s), ${err.length} com erro.`+(err.length?"\n"+err.slice(0,8).join("\n"):"")
- }catch(e){m.textContent="Não foi possível ler o arquivo."}
- $("csvLoc").value=""};
-$("mAdd").onclick=()=>{const id=+$("mEq").value,q=+$("mQtd").value,a=$("mIni").value,b=$("mFim").value,m=$("mMsg");
- if(!id||q<1||!a||(b&&b<=a)){m.textContent="Informe equipamento, quantidade e início. A previsão de retorno deve ser depois do início.";return}
- if(q>total(id)){m.textContent=`Só existem ${total(id)} unidade(s) cadastradas.`;return}
- const lim0=b?add(b,-1):S.man.filter(x=>x.eq==id).reduce((mx,x)=>{let y=mx;if(x.ini>y)y=x.ini;if(x.ret){const z=add(x.ret,-1);if(z>y)y=z}return y},a),
-   estouro=span(a,lim0).find(d=>emMan(id,d)+q>total(id));
- if(estouro){m.textContent=`Não é possível: em ${fmt(estouro)} já há ${emMan(id,estouro)} un. em manutenção e o estoque total é ${total(id)}. Reduza a quantidade ou ajuste as datas.`;return}
- S.man.push({id:Date.now(),eq:id,qtd:q,ini:a,ret:b||"",motivo:$("mMot").value.trim()});save();
- const lim=b?add(b,-1):S.loc.filter(l=>l.eq==id).reduce((x,l)=>l.fim>x?l.fim:x,a),falta=span(a,lim).find(d=>total(id,d)-emMan(id,d)-used(id,d)<0);
- renderMan();renderLoc();$("mMot").value="";
- m.textContent=falta?`Registrado. Atenção: a partir de ${fmt(falta)} faltam unidades para locações já registradas. Revise-as na aba Locações.`:"Manutenção registrada. O estoque foi atualizado."};
-$("edCancel").onclick=fecharEd;
-$("edUndo").onclick=()=>{const l=S.loc.find(x=>x.id===edId);if(!l)return;delete l.conf;save();fecharEd();renderLoc();$("lMsg").textContent="Confirmação desfeita. A locação voltou a ficar em andamento."};
-$("edSave").onclick=()=>{const l=S.loc.find(x=>x.id===edId),m=$("edMsg");if(!l){fecharEd();return}
- const eq=+$("edEq").value,c=$("edCli").value.trim(),q=+$("edQtd").value,a=$("edIni").value,b=$("edFim").value;
- if(!c||q<1||!a||!b||b<a){m.textContent="Preencha cliente, quantidade e um período válido.";return}
- if(eq!==l.eq||q!==l.qtd||a!==l.ini||b!==l.fim){const min=Math.min(...avail(eq,a,b,l.id).map(x=>x.v));
-  if(min<q){m.textContent=`Sem estoque para essa alteração: só ${Math.max(min,0)} unidade(s) livres em todo o período.`;return}}
- Object.assign(l,{eq,cliente:c,tel:$("edTel").value.trim(),qtd:q,ini:a,fim:b});if(l.conf)l.conf.data=b;
- save();fecharEd();renderLoc();$("lMsg").textContent="Locação atualizada."};
-const TEMAS=["auto","claro","escuro"],temaViewer=document.documentElement.getAttribute("data-theme");let tema="auto";
-function aplicaTema(){const r=document.documentElement;
- if(tema==="auto"){temaViewer?r.setAttribute("data-theme",temaViewer):r.removeAttribute("data-theme")}else r.setAttribute("data-theme",tema==="claro"?"light":"dark");
- $("tema").textContent="Tema: "+tema.replace("auto","automático")}
-try{tema=localStorage.getItem("estoque_tema")||"auto"}catch(e){}
-$("tema").onclick=()=>{tema=TEMAS[(TEMAS.indexOf(tema)+1)%3];try{localStorage.setItem("estoque_tema",tema)}catch(e){}aplicaTema()};
-aplicaTema();
-$("hGo").onclick=()=>{hBuscou=true;renderHist()};
-["hDe","hAte","hCli"].forEach(i=>$(i).onkeydown=e=>{if(e.key==="Enter")$("hGo").onclick()});
-$("hClr").onclick=()=>{["hTipo","hEq","hDe","hAte","hCli"].forEach(i=>$(i).value="");hBuscou=false;renderHist()};
-$("qClr").onclick=()=>{$("qEq").selectedIndex=0;$("qQtd").value=1;$("qIni").value="";$("qFim").value="";$("qOut").innerHTML="";$("qIni").focus()};
-$("cfgMd").onchange=()=>{S.cfg.mesmoDia=$("cfgMd").checked;save();renderLoc()};
-$("dDia").onchange=renderDia;
-$("dPrev").onclick=()=>{if($("dDia").value){$("dDia").value=add($("dDia").value,-1);renderDia()}};
-$("dNext").onclick=()=>{if($("dDia").value){$("dDia").value=add($("dDia").value,1);renderDia()}};
-$("dHoje").onclick=()=>{$("dDia").value=hojeLocal();renderDia()};
-$("dOut").onclick=e=>{const b=e.target.closest("[data-vc]");if(!b)return;
- const [id,tipo]=b.dataset.vc.split("|"),l=S.loc.find(x=>x.id==id),h0=hojeLocal();
- l.fim=l.fim<h0?h0:l.fim;l.conf={tipo,data:l.fim};save();renderLoc();
- $("lMsg").textContent=`${tipo} confirmada. ${l.qtd} un. de ${eqName(l.eq)} livres a partir de ${fmt(add(l.fim,1))}.`};
-document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
- document.querySelectorAll("nav button").forEach(x=>x.setAttribute("aria-selected",x===b));
- ["disp","nova","loc","hist","man","eq","dados"].forEach(t=>$(t).classList.toggle("hidden",t!==b.dataset.t))});
-(async()=>{
-  try{
-    await load();
-    S.man=S.man||[];S.cfg=S.cfg||{mesmoDia:true};
-    $("cfgMd").checked=S.cfg.mesmoDia;
-    fillSel();renderLoc();renderEq();renderMan();renderBk();
-    const hoje=hojeLocal();
-    $("mIni").value=hoje;$("dDia").value=hoje;renderDia();
-    $("qIni").value=add(hoje,7);$("qFim").value=add(hoje,14);
-    $("nIni").value=hoje;$("nFim").value=add(hoje,7);
-    setInterval(tick,5000);
-    document.addEventListener("visibilitychange",()=>{if(!document.hidden)tick()});
-    window.addEventListener("focus",tick);
-  }catch(e){console.error(e)}
-})();
+
+async function consultarDisponibilidade() {
+  const data_inicio = document.getElementById('cIni').value;
+  const data_fim = document.getElementById('cFim').value;
+
+  const res = await fetch(`/api/disponibilidade?data_inicio=${data_inicio}&data_fim=${data_fim}`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  const data = await res.json();
+
+  const container = document.getElementById('cRes');
+  if (data.length === 0) {
+    container.innerHTML = '<p class="msg">Nenhum equipamento cadastrado.</p>';
+    return;
+  }
+
+  let html = `<div class="scroll"><table><thead><tr>
+    <th>Código</th><th>Nome</th><th>Total Física</th><th>Em Uso no Período</th><th>Disponível</th>
+  </tr></thead><tbody>`;
+
+  data.forEach(item => {
+    const statusClass = item.disponivel > 0 ? 'ok' : 'bad';
+    html += `<tr>
+      <td>${item.codigo}</td>
+      <td>${item.nome}</td>
+      <td>${item.total}</td>
+      <td>${item.em_uso}</td>
+      <td><span class="tag ${statusClass}">${item.disponivel}</span></td>
+    </tr>`;
+  });
+
+  html += '</tbody></table></div>';
+  container.innerHTML = html;
+}
+
+function addItensSaida() {
+  const select = document.getElementById('sEquip');
+  const eqId = select.value;
+  const eqTexto = select.options[select.selectedIndex].text;
+  const qtd = parseInt(document.getElementById('sQtd').value);
+
+  if (!eqId || isNaN(qtd) || qtd <= 0) return;
+
+  itensSaidaTemp.push({ equipamento_id: eqId, nome: eqTexto, quantidade: qtd });
+  renderItensSaidaTemp();
+}
+
+function renderItensSaidaTemp() {
+  const container = document.getElementById('sItensLista');
+  if (itensSaidaTemp.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+
+  let html = '<div class="cols">';
+  itensSaidaTemp.forEach((it, idx) => {
+    html += `
+      <div class="col">
+        <h3>${it.nome}</h3>
+        <p>Qtd: <strong>${it.quantidade}</strong></p>
+        <button class="g d" onclick="remItemSaida(${idx})">Remover</button>
+      </div>
+    `;
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function remItemSaida(idx) {
+  itensSaidaTemp.splice(idx, 1);
+  renderItensSaidaTemp();
+}
+
+async function salvarSaida() {
+  const cliente = document.getElementById('sCli').value;
+  const data_inicio = document.getElementById('sIni').value;
+  const data_fim = document.getElementById('sFim').value;
+  const tipo = document.getElementById('sTipo').value;
+
+  if (!cliente || !data_inicio || !data_fim || itensSaidaTemp.length === 0) {
+    alert('Preencha as informações do evento e adicione pelo menos um item.');
+    return;
+  }
+
+  const payload = {
+    cliente,
+    data_inicio,
+    data_fim,
+    tipo,
+    itens: itensSaidaTemp
+  };
+
+  const res = await fetch('/api/saidas', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (res.ok) {
+    alert('Saída criada com sucesso!');
+    document.getElementById('sCli').value = '';
+    itensSaidaTemp = [];
+    renderItensSaidaTemp();
+    carregarHistorico();
+    mudaAba(3);
+  } else {
+    const err = await res.json();
+    alert('Erro: ' + (err.error || 'Erro ao salvar.'));
+  }
+}
+
+async function carregarHistorico() {
+  try {
+    const res = await fetch('/api/saidas', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+
+    const tbody = document.getElementById('hOut');
+    tbody.innerHTML = '';
+
+    data.forEach(s => {
+      const itensStr = s.itens.map(i => `${i.nome} (x${i.quantidade})`).join(', ');
+      tbody.innerHTML += `
+        <tr>
+          <td>#${s.id}</td>
+          <td>${s.cliente}</td>
+          <td><span class="tag g">${s.tipo}</span></td>
+          <td>${s.data_inicio} até ${s.data_fim}</td>
+          <td><span class="tag ok">${s.status || 'Ativo'}</span></td>
+          <td><small>${itensStr}</small></td>
+          <td>
+            <button class="g d" onclick="deletarSaida('${s.id}')">Excluir</button>
+          </td>
+        </tr>
+      `;
+    });
+
+    document.getElementById('rTotSaidas').innerText = data.length;
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+async function deletarSaida(id) {
+  if (!confirm('Deseja excluir esta saída?')) return;
+  await fetch(`/api/saidas/${id}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  carregarHistorico();
+}
+
+async function carregarReservasProntas() {
+  const container = document.getElementById('reservasProntasLista');
+  container.innerHTML = '<p class="sub">Carregando reservas...</p>';
+}
+
+async function carregarLocacoesAndamento() {
+  const container = document.getElementById('locacoesAndamentoLista');
+  container.innerHTML = '<p class="sub">Carregando locações...</p>';
+}
+
+async function carregarRelatorios() {
+  carregarEquipamentos();
+  carregarHistorico();
+}
 </script>
 </body>
 </html>
