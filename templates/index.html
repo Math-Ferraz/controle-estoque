@@ -4,525 +4,228 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Estoque por data – Locação de equipamentos</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v={{ v }}">
 </head>
 <body>
 <main>
-  <!-- TELA DE LOGIN / CADASTRO -->
-  <div id="authArea" class="auth-box">
-    <h1 id="authTitle" style="text-align: center; margin-bottom: 20px;">Entrar no Sistema</h1>
-    <p id="authSub" class="sub" style="text-align: center; margin-bottom: 20px;">Insira suas credenciais para continuar</p>
-    
-    <div style="display: flex; flex-direction: column; gap: 15px;">
-      <label>E-mail:
-        <input type="email" id="authEmail" placeholder="seu@email.com">
-      </label>
-      <label>Senha:
-        <input type="password" id="authPass" placeholder="******">
-      </label>
-      
-      <button class="b" id="authBtn" onclick="fazerAuth()" style="width: 100%; margin-top: 10px;">Entrar</button>
-      
-      <div style="text-align: center; margin-top: 10px;">
-        <small id="authToggleMsg">Não tem uma conta? <a href="#" onclick="toggleAuthMode(event)" style="color: var(--pri);">Cadastre-se</a></small>
-      </div>
-    </div>
-    
-    <div id="authFeedback" class="msg" style="text-align: center;"></div>
-  </div>
+<div id="loginArea" class="hidden">
+<section class="login">
+<h1>Estoque por data</h1>
+<h2 id="loginTitulo">Acesso ao sistema</h2>
+<p id="loginAviso" class="sub hidden"></p>
+<div class="form-col">
+<label>Usuário<input id="loginUser" autocomplete="username"></label>
+<label>Senha<input id="loginPass" type="password" autocomplete="current-password"></label>
+<label id="loginPass2Box" class="hidden">Repita a senha<input id="loginPass2" type="password" autocomplete="new-password"></label>
+<label id="loginTokenBox" class="hidden">Código de instalação<input id="loginToken" type="password" autocomplete="off"></label>
+<button class="b" id="btnLogin">Entrar</button>
+<button class="b hidden" id="btnSetup">Criar administrador</button>
+<div id="loginMsg" class="msg" role="status"></div>
+</div>
+</section>
+</div>
 
-  <!-- CONTEÚDO PRINCIPAL (Exibido após o login) -->
-  <div id="appArea" class="hidden">
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-      <div>
-        <h1>Estoque por data – Locação de equipamentos</h1>
-        <p class="sub">Consulte a disponibilidade real em tempo real, cadastre saídas, reservas e locações.</p>
-      </div>
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <span id="userDisplay" style="font-size: 14px; color: var(--mut);"></span>
-        <button class="g" onclick="fazerLogout()">Sair</button>
-      </div>
-    </div>
+<div id="appArea" class="hidden">
+<div id="avisoTeste" class="box warn hidden" role="alert" style="margin:0 0 12px"><b>Modo de teste:</b> neste servidor os dados são apagados sempre que ele reinicia, é atualizado ou fica um tempo sem uso. Use apenas dados fictícios. Para uso real, ative o armazenamento permanente (veja o README).</div>
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+<div><h1>Estoque por data</h1>
+<p class="sub">Consulte a disponibilidade em qualquer período, considerando devoluções e renovações.</p></div>
+<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+<div class="topo-user"><small id="userDisplay" style="font-weight:700;color:var(--ink)"></small><button class="g" id="btnLogout">Sair</button></div>
+<button class="g" id="tema" style="white-space:nowrap"></button>
+<small id="dbStatus">Conectando…</small></div>
+</div>
+<nav role="tablist">
+<button role="tab" data-t="disp" aria-selected="true">Disponibilidade</button>
+<button role="tab" data-t="nova" aria-selected="false">Nova locação</button>
+<button role="tab" data-t="loc" aria-selected="false">Locações</button>
+<button role="tab" data-t="hist" aria-selected="false">Histórico</button>
+<button role="tab" data-t="man" aria-selected="false">Manutenção</button>
+<button role="tab" data-t="eq" aria-selected="false">Equipamentos</button>
+<button role="tab" data-t="dados" aria-selected="false">Dados</button>
+<button role="tab" data-t="usr" aria-selected="false" id="tabUsr" class="hidden">Usuários</button>
+</nav>
 
-    <nav id="topNav">
-      <button id="tab-0" aria-selected="true" onclick="mudaAba(0)">1. Estoque Base</button>
-      <button id="tab-1" aria-selected="false" onclick="mudaAba(1)">2. Consulta Data</button>
-      <button id="tab-2" aria-selected="false" onclick="mudaAba(2)">3. Saída Externa</button>
-      <button id="tab-3" aria-selected="false" onclick="mudaAba(3)">4. Histórico</button>
-      <button id="tab-4" aria-selected="false" onclick="mudaAba(4)">5. Reservas Prontas</button>
-      <button id="tab-5" aria-selected="false" onclick="mudaAba(5)">6. Locações em Andamento</button>
-      <button id="tab-6" aria-selected="false" onclick="mudaAba(6)">7. Relatórios</button>
-    </nav>
+<div id="disp">
+<section>
+<h2>Consultar período</h2>
+<div class="row">
+<label>Equipamento<select id="qEq"></select></label>
+<label>Quantidade<input id="qQtd" type="number" min="1" value="1"></label>
+<label>Início<input id="qIni" type="date"></label>
+<label>Fim<input id="qFim" type="date"></label>
+<button class="b" id="qGo">Consultar</button>
+<button class="g" id="qClr">Limpar</button>
+</div>
+<div id="qOut"></div>
+</section>
+</div>
 
-    <!-- ABA 1: ESTOQUE BASE -->
-    <section id="sec-0">
-      <h2>Estoque Base Cadastrado</h2>
-      <div class="row" style="margin-bottom: 15px;">
-        <label>Código do Equipamento:
-          <input type="text" id="cadCod" placeholder="Ex: EQ-01">
-        </label>
-        <label>Nome do Equipamento:
-          <input type="text" id="cadNome" placeholder="Ex: Projetor HD">
-        </label>
-        <label>Qtd. Total Física:
-          <input type="number" id="cadQtd" min="1" value="1">
-        </label>
-        <button class="b" onclick="cadastrarEquipamento()">Cadastrar Equipamento</button>
-      </div>
-      <div class="scroll">
-        <table>
-          <thead>
-            <tr>
-              <th>Código</th>
-              <th>Nome</th>
-              <th>Qtd. Total</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody id="eTb"></tbody>
-        </table>
-      </div>
-    </section>
+<div id="nova" class="hidden">
+<section>
+<h2>Nova locação</h2>
+<div class="row">
+<label>Equipamento<select id="nEq"></select></label>
+<label>Cliente<input id="nCli" placeholder="Nome do cliente"></label>
+<label>Telefone<input id="nTel" type="tel" placeholder="(11) 90000-0000"></label>
+<label>Quantidade<input id="nQtd" type="number" min="1" value="1"></label>
+<label>Início<input id="nIni" type="date"></label>
+<label>Fim<input id="nFim" type="date"></label>
+<button class="b" id="nAdd">Registrar</button>
+</div>
+<div class="msg" id="nMsg" role="status"></div>
+</section>
+</div>
 
-    <!-- ABA 2: CONSULTA POR DATA -->
-    <section id="sec-1" class="hidden">
-      <h2>Consultar Disponibilidade por Período</h2>
-      <div class="row">
-        <label>Data Início:
-          <input type="date" id="cIni">
-        </label>
-        <label>Data Fim:
-          <input type="date" id="cFim">
-        </label>
-        <button class="b" onclick="consultarDisponibilidade()">Consultar Disponibilidade</button>
-      </div>
-      <div id="cRes" style="margin-top: 15px;"></div>
-    </section>
+<div id="loc" class="hidden">
+<section id="edSec" class="hidden">
+<h2>Editar locação</h2>
+<div class="row">
+<label>Equipamento<select id="edEq"></select></label>
+<label>Cliente<input id="edCli"></label>
+<label>Telefone<input id="edTel" type="tel"></label>
+<label>Quantidade<input id="edQtd" type="number" min="1"></label>
+<label>Início<input id="edIni" type="date"></label>
+<label>Fim<input id="edFim" type="date"></label>
+</div>
+<div class="row" style="margin-top:12px">
+<button class="b" id="edSave">Salvar alterações</button>
+<button class="g" id="edCancel">Cancelar</button>
+<button class="g d hidden" id="edUndo">Desfazer confirmação</button>
+</div>
+<div class="msg" id="edMsg" role="status"></div>
+</section>
+<section>
+<h2>Movimentação do dia</h2>
+<div class="row">
+<button class="g" id="dPrev">Dia anterior</button>
+<label>Data<input id="dDia" type="date"></label>
+<button class="g" id="dNext">Próximo dia</button>
+<button class="g" id="dHoje">Hoje</button>
+</div>
+<div class="cols" id="dOut"></div>
+</section>
+<section>
+<h2>Locações registradas</h2>
+<div class="scroll"><table><thead><tr><th>Equipamento</th><th>Cliente</th><th>Qtd</th><th>Período</th><th>Renovação / status</th><th>Encerramento</th></tr></thead><tbody id="lTb"></tbody></table></div>
+<div class="msg" id="lMsg" role="status"></div>
+</section>
+</div>
 
-    <!-- ABA 3: NOVA SAÍDA EXTERNA -->
-    <section id="sec-2" class="hidden">
-      <h2>Registrar Saída / Reserva Externa</h2>
-      <div class="row">
-        <label>Cliente / Evento:
-          <input type="text" id="sCli" placeholder="Ex: Evento Corporativo X">
-        </label>
-        <label>Data Início:
-          <input type="date" id="sIni">
-        </label>
-        <label>Data Fim:
-          <input type="date" id="sFim">
-        </label>
-        <label>Tipo de Evento:
-          <select id="sTipo">
-            <option value="Locacao">Locação</option>
-            <option value="Reserva">Reserva</option>
-            <option value="Manutencao">Manutenção</option>
-          </select>
-        </label>
-      </div>
+<div id="hist" class="hidden">
+<section>
+<h2>Devoluções e retiradas confirmadas</h2>
+<div class="row">
+<label>Tipo<select id="hTipo"><option value="">Todas</option><option value="Devolução">Devoluções</option><option value="Retirada">Retiradas</option></select></label>
+<label>Equipamento<select id="hEq"></select></label>
+<label>De<input id="hDe" type="date"></label>
+<label>Até<input id="hAte" type="date"></label>
+<label>Cliente ou telefone<input id="hCli" placeholder="Nome ou telefone"></label>
+<button class="b" id="hGo">Pesquisar</button>
+<button class="g" id="hClr">Limpar</button>
+</div>
+<small>Preencha só o que precisar e clique em Pesquisar. Campos em branco não filtram nada, e sem filtros aparecem todos os registros.</small>
+<div id="hOut"></div>
+</section>
+</div>
 
-      <h3 style="margin-top: 20px;">Selecionar Equipamentos</h3>
-      <div class="row">
-        <label>Equipamento:
-          <select id="sEquip"></select>
-        </label>
-        <label>Qtd:
-          <input type="number" id="sQtd" min="1" value="1">
-        </label>
-        <button class="g" onclick="addItensSaida()">+ Adicionar Item</button>
-      </div>
+<div id="man" class="hidden">
+<section>
+<h2>Registrar equipamento em manutenção</h2>
+<div class="row">
+<label>Equipamento<select id="mEq"></select></label>
+<label>Quantidade<input id="mQtd" type="number" min="1" value="1"></label>
+<label>Início<input id="mIni" type="date"></label>
+<label>Previsão de retorno (opcional)<input id="mFim" type="date"></label>
+<label>Motivo<input id="mMot" placeholder="Ex.: compressor com defeito"></label>
+<button class="b" id="mAdd">Registrar</button>
+</div>
+<div class="msg" id="mMsg" role="status"></div>
+<small>Enquanto estiver em manutenção, a unidade é descontada do estoque disponível. Ela volta a contar na data de retorno.</small>
+</section>
+<section>
+<h2>Equipamentos em manutenção</h2>
+<div id="mResumo" class="msg" style="margin:0 0 10px"></div>
+<div class="scroll"><table><thead><tr><th>Equipamento</th><th>Qtd</th><th>Período</th><th>Motivo</th><th>Situação</th><th></th></tr></thead><tbody id="mTb"></tbody></table></div>
+<div class="msg" id="mLst" role="status"></div>
+</section>
+</div>
 
-      <div id="sItensLista" style="margin-top: 15px;"></div>
-      <button class="b" style="margin-top: 15px;" onclick="salvarSaida()">Confirmar e Salvar Saída</button>
-    </section>
+<div id="eq" class="hidden">
+<section>
+<h2>Equipamentos e estoque</h2><p class="muted">Os números desta tabela são referentes a <b>hoje</b>. Manutenções futuras aparecem somente nas consultas dos períodos em que estarão ativas.</p>
+<div class="scroll"><table><thead><tr><th>Equipamento</th><th>Total</th><th>Disponível hoje</th><th>Alugado hoje</th><th>Manutenção hoje</th><th></th></tr></thead><tbody id="eTb"></tbody></table></div>
+<div class="row" style="margin-top:12px">
+<label>Novo equipamento<input id="eNome" placeholder="Ex.: Forno combinado"></label>
+<label>Quantidade total<input id="eTot" type="number" min="0" value="1"></label>
+<button class="b" id="eAdd">Adicionar</button>
+</div>
+<div class="msg" id="eMsg" role="status"></div>
+<label style="flex-direction:row;align-items:center;gap:8px;margin-top:14px"><input type="checkbox" id="cfgMd" style="width:auto"> Devolução libera o equipamento no mesmo dia (outra locação pode começar na data em que esta termina)</label>
+</section>
+</div>
+<div id="dados" class="hidden">
+<section>
+<h2>Backup dos dados</h2>
+<p style="margin:0 0 10px;color:var(--mut)">Os dados ficam salvos no servidor do escritório. Baixe um backup com frequência, principalmente antes de trocar de computador ou fazer manutenção no sistema.</p>
+<div id="bkInfo" class="msg" style="margin:0 0 10px"></div>
+<div class="row">
+<button class="b" id="bkExp">Exportar backup</button>
+<label>Importar backup (.json)<input type="file" id="bkFile" accept=".json,application/json"></label>
+</div>
+<div id="bkMsg" class="msg" style="white-space:pre-wrap" role="status"></div>
+<div id="bkAct" class="row" style="margin-top:8px"></div>
+<textarea id="bkTxt" class="hidden" readonly rows="6" style="width:100%;margin-top:8px;font:12px monospace;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px"></textarea>
+</section>
+<section>
+<h2>Importar planilha (CSV)</h2>
+<p style="margin:0 0 10px;color:var(--mut)">No Excel: Arquivo, Salvar como, CSV. Baixe os modelos para ver as colunas. Datas no formato dd/mm/aaaa. A importação de locações não bloqueia por falta de estoque, pois são locações que já existem.</p>
+<div class="row"><button class="g" id="mdEq">Baixar modelo de equipamentos</button><button class="g" id="mdLoc">Baixar modelo de locações</button></div>
+<div class="row" style="margin-top:12px">
+<label>Equipamentos (.csv)<input type="file" id="csvEq" accept=".csv,text/csv,.txt"></label>
+<label>Locações em andamento (.csv)<input type="file" id="csvLoc" accept=".csv,text/csv,.txt"></label>
+</div>
+<div id="csvMsg" class="msg" style="white-space:pre-wrap" role="status"></div>
+</section>
+<section id="bkDbBox" class="hidden">
+<h2>Cópia completa do banco (administrador)</h2>
+<p style="margin:0 0 10px;color:var(--mut)">Baixa o arquivo do banco com locações, equipamentos, manutenção, usuários e registro de alterações. Guarde em local seguro: ele contém dados de clientes.</p>
+<button class="b" id="bkDb">Baixar cópia do banco</button>
+</section>
+<section>
+<h2>Minha conta</h2>
+<div class="row">
+<label>Senha atual<input id="pwAtual" type="password" autocomplete="current-password"></label>
+<label>Nova senha (mín. 10 caracteres)<input id="pwNova" type="password" autocomplete="new-password"></label>
+<label>Repita a nova senha<input id="pwConf" type="password" autocomplete="new-password"></label>
+<button class="b" id="pwGo">Alterar senha</button>
+</div>
+<div class="msg" id="pwMsg" role="status"></div>
+</section>
+</div>
 
-    <!-- ABA 4: HISTÓRICO -->
-    <section id="sec-3" class="hidden">
-      <h2>Histórico Completo de Saídas</h2>
-      <div class="scroll">
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Cliente / Evento</th>
-              <th>Tipo</th>
-              <th>Período</th>
-              <th>Status</th>
-              <th>Itens</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody id="hOut"></tbody>
-        </table>
-      </div>
-    </section>
+<div id="usr" class="hidden">
+<section>
+<h2>Usuários</h2>
+<div class="row">
+<label>Usuário<input id="uNome" autocomplete="off" placeholder="Ex.: maria"></label>
+<label>Senha inicial (mín. 10)<input id="uSenha" type="password" autocomplete="new-password"></label>
+<label>Perfil<select id="uPerfil"><option value="0">Usuário</option><option value="1">Administrador</option></select></label>
+<button class="b" id="uAdd">Cadastrar</button>
+</div>
+<div class="msg" id="uMsg" role="status"></div>
+<div class="scroll" style="margin-top:12px"><table style="min-width:600px"><thead><tr><th>Usuário</th><th>Perfil</th><th>Situação</th><th>Criado em</th><th></th></tr></thead><tbody id="uTb"></tbody></table></div>
+</section>
+<section>
+<h2>Registro de alterações</h2>
+<div class="row" style="margin-bottom:10px"><button class="g" id="aAtual">Atualizar</button></div>
+<div class="scroll"><table style="min-width:520px"><thead><tr><th>Quando</th><th>Quem</th><th>O que foi feito</th></tr></thead><tbody id="aTb"></tbody></table></div>
+</section>
+</div>
 
-    <!-- ABA 5: RESERVAS PRONTAS -->
-    <section id="sec-4" class="hidden">
-      <h2>Reservas Prontas para Saída</h2>
-      <div id="reservasProntasLista"></div>
-    </section>
-
-    <!-- ABA 6: LOCAÇÕES EM ANDAMENTO -->
-    <section id="sec-5" class="hidden">
-      <h2>Locações em Andamento (Em Campo)</h2>
-      <div id="locacoesAndamentoLista"></div>
-    </section>
-
-    <!-- ABA 7: RELATÓRIOS -->
-    <section id="sec-6" class="hidden">
-      <h2>Relatórios e Métricas</h2>
-      <div class="cols">
-        <div class="col">
-          <h3>Equipamentos</h3>
-          <p>Total de Modelos: <span id="rTotEquips" class="big">0</span></p>
-        </div>
-        <div class="col">
-          <h3>Saídas Ativas</h3>
-          <p>Locações / Reservas: <span id="rTotSaidas" class="big">0</span></p>
-        </div>
-      </div>
-    </section>
-  </div>
+<small>Os dados ficam salvos no servidor do escritório. A data final da locação conta como dia de uso; o equipamento volta ao estoque no dia seguinte.</small>
+</div>
 </main>
-
-<script>
-// Lógica do Frontend (JavaScript)
-let token = localStorage.getItem('token') || '';
-let isCadastrando = false;
-let itensSaidaTemp = [];
-
-window.addEventListener('DOMContentLoaded', () => {
-  const hoje = new Date().toISOString().split('T')[0];
-  document.getElementById('cIni').value = hoje;
-  document.getElementById('cFim').value = hoje;
-  document.getElementById('sIni').value = hoje;
-  document.getElementById('sFim').value = hoje;
-
-  if (token) {
-    validarTokenEIniciar();
-  }
-});
-
-function toggleAuthMode(e) {
-  e.preventDefault();
-  isCadastrando = !isCadastrando;
-  document.getElementById('authTitle').innerText = isCadastrando ? 'Criar Nova Conta' : 'Entrar no Sistema';
-  document.getElementById('authBtn').innerText = isCadastrando ? 'Cadastrar' : 'Entrar';
-  document.getElementById('authToggleMsg').innerHTML = isCadastrando 
-    ? 'Já tem uma conta? <a href="#" onclick="toggleAuthMode(event)" style="color: var(--pri);">Entrar</a>' 
-    : 'Não tem uma conta? <a href="#" onclick="toggleAuthMode(event)" style="color: var(--pri);">Cadastre-se</a>';
-}
-
-async function fazerAuth() {
-  const email = document.getElementById('authEmail').value;
-  const password = document.getElementById('authPass').value;
-  const fb = document.getElementById('authFeedback');
-  fb.innerText = '';
-
-  if (!email || !password) {
-    fb.innerText = 'Preencha e-mail e senha.';
-    fb.className = 'msg bad';
-    return;
-  }
-
-  const endpoint = isCadastrando ? '/api/register' : '/api/login';
-  try {
-    const res = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-    const data = await res.json();
-
-    if (!res.ok) {
-      fb.innerText = data.error || 'Erro na operação.';
-      fb.className = 'msg bad';
-      return;
-    }
-
-    if (isCadastrando) {
-      fb.innerText = 'Conta criada com sucesso! Faça login.';
-      fb.className = 'msg ok';
-      toggleAuthMode(new Event('click'));
-    } else {
-      token = data.token;
-      localStorage.setItem('token', token);
-      iniciarAplicacao(data.user);
-    }
-  } catch (err) {
-    fb.innerText = 'Erro ao conectar ao servidor.';
-    fb.className = 'msg bad';
-  }
-}
-
-function validarTokenEIniciar() {
-  iniciarAplicacao({ email: 'Usuário Conectado' });
-}
-
-function iniciarAplicacao(user) {
-  document.getElementById('authArea').classList.add('hidden');
-  document.getElementById('appArea').classList.remove('hidden');
-  document.getElementById('userDisplay').innerText = user.email;
-  carregarEquipamentos();
-  carregarHistorico();
-}
-
-function fazerLogout() {
-  token = '';
-  localStorage.removeItem('token');
-  document.getElementById('appArea').classList.add('hidden');
-  document.getElementById('authArea').classList.remove('hidden');
-}
-
-function mudaAba(idx) {
-  for (let i = 0; i <= 6; i++) {
-    document.getElementById(`sec-${i}`).classList.add('hidden');
-    document.getElementById(`tab-${i}`).setAttribute('aria-selected', 'false');
-  }
-  document.getElementById(`sec-${idx}`).classList.remove('hidden');
-  document.getElementById(`tab-${idx}`).setAttribute('aria-selected', 'true');
-
-  if (idx === 4) carregarReservasProntas();
-  if (idx === 5) carregarLocacoesAndamento();
-  if (idx === 6) carregarRelatorios();
-}
-
-async function carregarEquipamentos() {
-  try {
-    const res = await fetch('/api/equipamentos', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    const data = await res.json();
-    
-    const tbody = document.getElementById('eTb');
-    const select = document.getElementById('sEquip');
-    tbody.innerHTML = '';
-    select.innerHTML = '';
-
-    data.forEach(eq => {
-      tbody.innerHTML += `
-        <tr>
-          <td>${eq.codigo}</td>
-          <td>${eq.nome}</td>
-          <td>${eq.quantidade_total}</td>
-          <td>
-            <button class="g d" onclick="deletarEquipamento('${eq.id}')">Excluir</button>
-          </td>
-        </tr>
-      `;
-      select.innerHTML += `<option value="${eq.id}">${eq.codigo} - ${eq.nome}</option>`;
-    });
-
-    document.getElementById('rTotEquips').innerText = data.length;
-  } catch (err) {
-    console.error(err);
-  }
-}
-
-async function cadastrarEquipamento() {
-  const codigo = document.getElementById('cadCod').value;
-  const nome = document.getElementById('cadNome').value;
-  const quantidade_total = parseInt(document.getElementById('cadQtd').value);
-
-  if (!codigo || !nome || isNaN(quantidade_total)) {
-    alert('Preencha todos os campos!');
-    return;
-  }
-
-  await fetch('/api/equipamentos', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify({ codigo, nome, quantidade_total })
-  });
-
-  document.getElementById('cadCod').value = '';
-  document.getElementById('cadNome').value = '';
-  document.getElementById('cadQtd').value = '1';
-  carregarEquipamentos();
-}
-
-async function deletarEquipamento(id) {
-  if (!confirm('Deseja realmente excluir este equipamento?')) return;
-  await fetch(`/api/equipamentos/${id}`, {
-    method: 'DELETE',
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
-  carregarEquipamentos();
-}
-
-async function consultarDisponibilidade() {
-  const data_inicio = document.getElementById('cIni').value;
-  const data_fim = document.getElementById('cFim').value;
-
-  const res = await fetch(`/api/disponibilidade?data_inicio=${data_inicio}&data_fim=${data_fim}`, {
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
-  const data = await res.json();
-
-  const container = document.getElementById('cRes');
-  if (data.length === 0) {
-    container.innerHTML = '<p class="msg">Nenhum equipamento cadastrado.</p>';
-    return;
-  }
-
-  let html = `<div class="scroll"><table><thead><tr>
-    <th>Código</th><th>Nome</th><th>Total Física</th><th>Em Uso no Período</th><th>Disponível</th>
-  </tr></thead><tbody>`;
-
-  data.forEach(item => {
-    const statusClass = item.disponivel > 0 ? 'ok' : 'bad';
-    html += `<tr>
-      <td>${item.codigo}</td>
-      <td>${item.nome}</td>
-      <td>${item.total}</td>
-      <td>${item.em_uso}</td>
-      <td><span class="tag ${statusClass}">${item.disponivel}</span></td>
-    </tr>`;
-  });
-
-  html += '</tbody></table></div>';
-  container.innerHTML = html;
-}
-
-function addItensSaida() {
-  const select = document.getElementById('sEquip');
-  const eqId = select.value;
-  const eqTexto = select.options[select.selectedIndex].text;
-  const qtd = parseInt(document.getElementById('sQtd').value);
-
-  if (!eqId || isNaN(qtd) || qtd <= 0) return;
-
-  itensSaidaTemp.push({ equipamento_id: eqId, nome: eqTexto, quantidade: qtd });
-  renderItensSaidaTemp();
-}
-
-function renderItensSaidaTemp() {
-  const container = document.getElementById('sItensLista');
-  if (itensSaidaTemp.length === 0) {
-    container.innerHTML = '';
-    return;
-  }
-
-  let html = '<div class="cols">';
-  itensSaidaTemp.forEach((it, idx) => {
-    html += `
-      <div class="col">
-        <h3>${it.nome}</h3>
-        <p>Qtd: <strong>${it.quantidade}</strong></p>
-        <button class="g d" onclick="remItemSaida(${idx})">Remover</button>
-      </div>
-    `;
-  });
-  html += '</div>';
-  container.innerHTML = html;
-}
-
-function remItemSaida(idx) {
-  itensSaidaTemp.splice(idx, 1);
-  renderItensSaidaTemp();
-}
-
-async function salvarSaida() {
-  const cliente = document.getElementById('sCli').value;
-  const data_inicio = document.getElementById('sIni').value;
-  const data_fim = document.getElementById('sFim').value;
-  const tipo = document.getElementById('sTipo').value;
-
-  if (!cliente || !data_inicio || !data_fim || itensSaidaTemp.length === 0) {
-    alert('Preencha as informações do evento e adicione pelo menos um item.');
-    return;
-  }
-
-  const payload = {
-    cliente,
-    data_inicio,
-    data_fim,
-    tipo,
-    itens: itensSaidaTemp
-  };
-
-  const res = await fetch('/api/saidas', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify(payload)
-  });
-
-  if (res.ok) {
-    alert('Saída criada com sucesso!');
-    document.getElementById('sCli').value = '';
-    itensSaidaTemp = [];
-    renderItensSaidaTemp();
-    carregarHistorico();
-    mudaAba(3);
-  } else {
-    const err = await res.json();
-    alert('Erro: ' + (err.error || 'Erro ao salvar.'));
-  }
-}
-
-async function carregarHistorico() {
-  try {
-    const res = await fetch('/api/saidas', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    const data = await res.json();
-
-    const tbody = document.getElementById('hOut');
-    tbody.innerHTML = '';
-
-    data.forEach(s => {
-      const itensStr = s.itens.map(i => `${i.nome} (x${i.quantidade})`).join(', ');
-      tbody.innerHTML += `
-        <tr>
-          <td>#${s.id}</td>
-          <td>${s.cliente}</td>
-          <td><span class="tag g">${s.tipo}</span></td>
-          <td>${s.data_inicio} até ${s.data_fim}</td>
-          <td><span class="tag ok">${s.status || 'Ativo'}</span></td>
-          <td><small>${itensStr}</small></td>
-          <td>
-            <button class="g d" onclick="deletarSaida('${s.id}')">Excluir</button>
-          </td>
-        </tr>
-      `;
-    });
-
-    document.getElementById('rTotSaidas').innerText = data.length;
-  } catch (err) {
-    console.error(err);
-  }
-}
-
-async function deletarSaida(id) {
-  if (!confirm('Deseja excluir esta saída?')) return;
-  await fetch(`/api/saidas/${id}`, {
-    method: 'DELETE',
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
-  carregarHistorico();
-}
-
-async function carregarReservasProntas() {
-  const container = document.getElementById('reservasProntasLista');
-  container.innerHTML = '<p class="sub">Carregando reservas...</p>';
-}
-
-async function carregarLocacoesAndamento() {
-  const container = document.getElementById('locacoesAndamentoLista');
-  container.innerHTML = '<p class="sub">Carregando locações...</p>';
-}
-
-async function carregarRelatorios() {
-  carregarEquipamentos();
-  carregarHistorico();
-}
-</script>
+<script src="{{ url_for('static', filename='script.js') }}?v={{ v }}"></script>
 </body>
 </html>

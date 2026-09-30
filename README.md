@@ -1,52 +1,45 @@
-# Controle de Estoque - Locadora
+# Controle de Estoque - Locadora (login + Render)
 
-Primeira etapa da migração do HTML original para um sistema local com banco de dados.
-
-## O que esta versão faz
-
-- Mantém as telas e regras de estoque do HTML original.
-- Troca o `localStorage` por SQLite.
-- O navegador conversa com o backend Flask em `/api/state`.
-- O banco é criado automaticamente em `data/estoque.db`.
-- Backup JSON continua disponível.
-- Exportação de CSV funciona diretamente no navegador.
-
-## Como iniciar no Windows
-
-1. Instale Python 3.12 ou mais recente.
-2. Abra o PowerShell nesta pasta.
-3. Crie o ambiente virtual:
-
-```powershell
-python -m venv .venv
+## Pastas
 ```
-
-4. Ative:
-
-```powershell
-.venv\Scripts\Activate.ps1
+app.py  requirements.txt  render.yaml  _gitignore (renomeie para .gitignore)
+templates/index.html
+static/style.css  static/script.js
+data/   <- criada sozinha (banco, backups, chave). NÃO vai para o GitHub.
 ```
+Apague os antigos `index.html`, `script.js` e `style.css` soltos na raiz.
 
-5. Instale:
+## ATENÇÃO: dados no Render gratuito são apagados
+No plano gratuito o disco é apagado a cada reinício, atualização ou quando o serviço "dorme" (15 min sem uso; ele leva cerca de 1 minuto para acordar). Por isso:
+- **Teste** só com dados fictícios. A tela mostra um aviso amarelo de "Modo de teste".
+- **Uso real** exige plano pago + disco permanente (ver abaixo). Confira preços atuais em render.com/pricing.
 
-```powershell
-pip install -r requirements.txt
-```
+## Publicar no Render (teste)
+1. Crie um repositório **privado** no GitHub e envie os arquivos (sem a pasta `data/`).
+2. No Render: **New > Blueprint** e escolha o repositório (usa o `render.yaml`).
+   Ou **New > Web Service** com: Build `pip install -r requirements.txt`, Start `gunicorn app:app --workers 1 --threads 8 --timeout 60 --bind 0.0.0.0:$PORT`, e variáveis `PYTHON_VERSION=3.12.3`, `SECRET_KEY` (texto longo aleatório) e `SETUP_TOKEN` (outro texto aleatório).
+3. Depois do deploy, abra o endereço `https://...onrender.com`.
+4. No primeiro acesso a tela pede o **Código de instalação**: é o valor de `SETUP_TOKEN` (Render > Environment). Crie o administrador.
+5. O administrador cadastra as outras pessoas em **Usuários**.
 
-6. Inicie:
+## Uso real (dados permanentes)
+1. Mude o serviço para um plano pago (ex.: Starter).
+2. Em **Disks**, adicione um disco com mount path `/var/data`.
+3. Em Environment, adicione `DATA_DIR=/var/data` e reinicie. O aviso de teste some.
+Observação: com disco, cada atualização do sistema causa uma breve interrupção.
 
-```powershell
-python app.py
-```
+## Segurança embutida
+- Login obrigatório; senha mínima de 10 caracteres; sessão de 12 h; cookie só por HTTPS.
+- Sem cadastro aberto. O primeiro administrador exige o código de instalação.
+- 5 erros de senha bloqueiam aquele usuário naquele IP por alguns minutos.
+- Cabeçalhos de segurança, proteção contra envio de outro site e bloqueio para buscadores.
+- Registro de alterações e de logins (Usuários > Registro de alterações).
+- Mantenha o repositório privado. Os dados têm nomes e telefones de clientes (LGPD): dê acesso só a quem precisa e desative contas de quem sai.
 
-7. Abra no navegador:
+## Backup
+- Administrador: **Dados > Baixar cópia do banco**. Faça toda semana e guarde fora do Render.
+- Todos: **Dados > Exportar backup** (JSON).
+- Com disco, também há cópia diária em `data/backups/` (30 dias).
 
-http://127.0.0.1:5000
-
-Também existe `iniciar.bat` para facilitar a abertura depois que o ambiente virtual estiver configurado.
-
-## Observação importante
-
-Nesta primeira etapa, o banco guarda o estado completo do aplicativo em JSON dentro do SQLite. Isso foi proposital para preservar o funcionamento do HTML original e reduzir o risco de alterar a lógica de disponibilidade.
-
-Na próxima etapa, podemos migrar para tabelas reais (equipamentos, locações, manutenções e movimentações), mantendo a mesma interface.
+## Rodar no computador (opcional)
+`python app.py` (ou `iniciar.bat`). Sem `SETUP_TOKEN`, o primeiro administrador só pode ser criado no próprio computador.
