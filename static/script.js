@@ -328,12 +328,39 @@ function renderEq(){
    const disp=Math.max(0,total-alug-man);
 
    return `<tr>
-     <td><b>${esc(e.nome)}</b></td>
-     <td><input type="number" min="0" value="${total}" data-t="${e.id}" style="width:80px" title="Não pode ficar abaixo do estoque já comprometido"></td>
+     <td>
+       <span data-nome-view="${e.id}">
+         <b>${esc(e.nome)}</b>
+       </span>
+       <input
+         type="text"
+         value="${esc(e.nome)}"
+         data-nome="${e.id}"
+         style="display:none;width:220px"
+       >
+     </td>
+
+     <td>
+       <input
+         type="number"
+         min="0"
+         value="${total}"
+         data-t="${e.id}"
+         style="width:80px"
+         title="Não pode ficar abaixo do estoque já comprometido"
+       >
+     </td>
+
      <td><b>${disp}</b></td>
      <td>${alug}</td>
      <td>${man}</td>
-     <td><button class="g d" data-d="${e.id}">Remover</button></td>
+
+     <td>
+       <button class="g" data-edit-nome="${e.id}">Editar nome</button>
+       <button class="b hidden" data-save-nome="${e.id}">Salvar</button>
+       <button class="g hidden" data-cancel-nome="${e.id}">Cancelar</button>
+       <button class="g d" data-d="${e.id}">Remover</button>
+     </td>
    </tr>`;
  }).join("");
 
@@ -357,6 +384,100 @@ function renderEq(){
    renderMan();
    $("eMsg").textContent=`Estoque de ${e.nome} atualizado para ${novo} unidade(s).`;
  });
+
+tb.querySelectorAll("[data-edit-nome]").forEach(b=>b.onclick=()=>{
+  const id=Number(b.dataset.editNome);
+  const e=S.eq.find(x=>Number(x.id)===id);
+  if(!e)return;
+
+  const input=tb.querySelector(`[data-nome="${id}"]`);
+  const view=tb.querySelector(`[data-nome-view="${id}"]`);
+  const salvar=tb.querySelector(`[data-save-nome="${id}"]`);
+  const cancelar=tb.querySelector(`[data-cancel-nome="${id}"]`);
+
+  if(!input||!view||!salvar||!cancelar)return;
+
+  input.value=e.nome;
+
+  view.style.display="none";
+  input.style.display="inline-block";
+
+  b.classList.add("hidden");
+  salvar.classList.remove("hidden");
+  cancelar.classList.remove("hidden");
+
+  input.focus();
+  input.select();
+});
+
+tb.querySelectorAll("[data-cancel-nome]").forEach(b=>b.onclick=()=>{
+  const id=Number(b.dataset.cancelNome);
+  const e=S.eq.find(x=>Number(x.id)===id);
+  if(!e)return;
+
+  const input=tb.querySelector(`[data-nome="${id}"]`);
+  const view=tb.querySelector(`[data-nome-view="${id}"]`);
+  const editar=tb.querySelector(`[data-edit-nome="${id}"]`);
+  const salvar=tb.querySelector(`[data-save-nome="${id}"]`);
+  const cancelar=tb.querySelector(`[data-cancel-nome="${id}"]`);
+
+  if(!input||!view||!editar||!salvar||!cancelar)return;
+
+  input.value=e.nome;
+
+  view.style.display="inline";
+  input.style.display="none";
+
+  editar.classList.remove("hidden");
+  salvar.classList.add("hidden");
+  cancelar.classList.add("hidden");
+});
+
+tb.querySelectorAll("[data-save-nome]").forEach(b=>b.onclick=()=>{
+  const id=Number(b.dataset.saveNome);
+  const e=S.eq.find(x=>Number(x.id)===id);
+  if(!e)return;
+
+  const input=tb.querySelector(`[data-nome="${id}"]`);
+  const view=tb.querySelector(`[data-nome-view="${id}"]`);
+  const editar=tb.querySelector(`[data-edit-nome="${id}"]`);
+  const salvar=tb.querySelector(`[data-save-nome="${id}"]`);
+  const cancelar=tb.querySelector(`[data-cancel-nome="${id}"]`);
+
+  if(!input||!view||!editar||!salvar||!cancelar)return;
+
+  const novo=input.value.trim();
+
+  if(!novo){
+    $("eMsg").textContent="Informe um nome para o equipamento.";
+    input.focus();
+    return;
+  }
+
+  const duplicado=S.eq.some(x=>
+    Number(x.id)!==id &&
+    nrm(x.nome)===nrm(novo)
+  );
+
+  if(duplicado){
+    $("eMsg").textContent="Já existe outro equipamento com esse nome.";
+    input.focus();
+    return;
+  }
+
+  const antigo=e.nome;
+
+  e.nome=novo;
+
+  save();
+  renderEq();
+  fillSel();
+  renderLoc();
+  renderMan();
+
+  $("eMsg").textContent=`Nome do equipamento alterado de "${antigo}" para "${novo}".`;
+});
+
 
  tb.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>{
    const id=Number(b.dataset.d);

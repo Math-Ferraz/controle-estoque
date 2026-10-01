@@ -431,7 +431,11 @@ def descrever_mudancas(old, new):
         if i not in eo:
             out.append(f'Cadastrou equipamento "{e.get("nome")}" ({e.get("total")} un.)')
         elif e != eo[i]:
-            if e.get("total") != eo[i].get("total"):
+            if e.get("nome") != eo[i].get("nome") and e.get("total") != eo[i].get("total"):
+                out.append(f'Renomeou equipamento "{eo[i].get("nome")}" para "{e.get("nome")}" e alterou total: {eo[i].get("total")} → {e.get("total")}')
+            elif e.get("nome") != eo[i].get("nome"):
+                out.append(f'Renomeou equipamento "{eo[i].get("nome")}" para "{e.get("nome")}"')
+            elif e.get("total") != eo[i].get("total"):
                 out.append(f'Alterou o total de "{e.get("nome")}": {eo[i].get("total")} → {e.get("total")}')
             else:
                 out.append(f'Alterou equipamento "{e.get("nome")}"')

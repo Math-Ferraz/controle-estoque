@@ -152,16 +152,52 @@
 </div>
 
 <div id="eq" class="hidden">
+<section id="edEqSec" class="hidden">
+<h2>Editar equipamento</h2>
+<div class="row">
+<label>Nome do equipamento<input id="edEqNome"></label>
+<label>Quantidade total<input id="edEqTot" type="number" min="0"></label>
+</div>
+<div class="row" style="margin-top:12px">
+<button class="b" id="edEqSave">Salvar alterações</button>
+<button class="g" id="edEqCancel">Cancelar</button>
+</div>
+<div class="msg" id="edEqMsg" role="status"></div>
+</section>
 <section>
-<h2>Equipamentos e estoque</h2><p class="muted">Os números desta tabela são referentes a <b>hoje</b>. Manutenções futuras aparecem somente nas consultas dos períodos em que estarão ativas.</p>
-<div class="scroll"><table><thead><tr><th>Equipamento</th><th>Total</th><th>Disponível hoje</th><th>Alugado hoje</th><th>Manutenção hoje</th><th></th></tr></thead><tbody id="eTb"></tbody></table></div>
+<h2>Equipamentos e estoque</h2>
+<p class="muted">
+  Os números desta tabela são referentes a <b>hoje</b>. Manutenções futuras aparecem somente nas consultas dos períodos em que estarão ativas.
+</p>
+
+<div class="scroll">
+<table>
+<thead>
+<tr>
+<th>Equipamento</th>
+<th>Total</th>
+<th>Disponível hoje</th>
+<th>Alugado hoje</th>
+<th>Manutenção hoje</th>
+<th>Ações</th>
+</tr>
+</thead>
+<tbody id="eTb"></tbody>
+</table>
+</div>
+
 <div class="row" style="margin-top:12px">
 <label>Novo equipamento<input id="eNome" placeholder="Ex.: Forno combinado"></label>
 <label>Quantidade total<input id="eTot" type="number" min="0" value="1"></label>
 <button class="b" id="eAdd">Adicionar</button>
 </div>
+
 <div class="msg" id="eMsg" role="status"></div>
-<label style="flex-direction:row;align-items:center;gap:8px;margin-top:14px"><input type="checkbox" id="cfgMd" style="width:auto"> Devolução libera o equipamento no mesmo dia (outra locação pode começar na data em que esta termina)</label>
+
+<label style="flex-direction:row;align-items:center;gap:8px;margin-top:14px">
+<input type="checkbox" id="cfgMd" style="width:auto">
+Devolução libera o equipamento no mesmo dia (outra locação pode começar na data em que esta termina)
+</label>
 </section>
 </div>
 <div id="dados" class="hidden">
