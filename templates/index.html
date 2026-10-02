@@ -1,267 +1,1496 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
+
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1, viewport-fit=cover">
+
 <title>Estoque por data – Locação de equipamentos</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v={{ v }}">
+
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='style.css') }}?v={{ v }}">
+
 </head>
+
 <body>
+
 <main>
+
+<!-- =========================================================
+     LOGIN
+========================================================= -->
+
 <div id="loginArea" class="hidden">
+
 <section class="login">
+
 <h1>Estoque por data</h1>
-<h2 id="loginTitulo">Acesso ao sistema</h2>
-<p id="loginAviso" class="sub hidden"></p>
+
+<h2 id="loginTitulo">
+Acesso ao sistema
+</h2>
+
+<p
+  id="loginAviso"
+  class="sub hidden">
+</p>
+
 <div class="form-col">
-<label>Usuário<input id="loginUser" autocomplete="username"></label>
-<label>Senha<input id="loginPass" type="password" autocomplete="current-password"></label>
-<label id="loginPass2Box" class="hidden">Repita a senha<input id="loginPass2" type="password" autocomplete="new-password"></label>
-<label id="loginTokenBox" class="hidden">Código de instalação<input id="loginToken" type="password" autocomplete="off"></label>
-<button class="b" id="btnLogin">Entrar</button>
-<button class="b hidden" id="btnSetup">Criar administrador</button>
-<div id="loginMsg" class="msg" role="status"></div>
+
+<label>
+Usuário
+<input
+  id="loginUser"
+  autocomplete="username">
+</label>
+
+<label>
+Senha
+<input
+  id="loginPass"
+  type="password"
+  autocomplete="current-password">
+</label>
+
+<label
+  id="loginPass2Box"
+  class="hidden">
+
+Repita a senha
+
+<input
+  id="loginPass2"
+  type="password"
+  autocomplete="new-password">
+
+</label>
+
+<label
+  id="loginTokenBox"
+  class="hidden">
+
+Código de instalação
+
+<input
+  id="loginToken"
+  type="password"
+  autocomplete="off">
+
+</label>
+
+<button
+  class="b"
+  id="btnLogin">
+  Entrar
+</button>
+
+<button
+  class="b hidden"
+  id="btnSetup">
+  Criar administrador
+</button>
+
+<div
+  id="loginMsg"
+  class="msg"
+  role="status">
 </div>
+
+</div>
+
 </section>
+
 </div>
+
+
+<!-- =========================================================
+     APLICAÇÃO
+========================================================= -->
 
 <div id="appArea" class="hidden">
-<div id="avisoTeste" class="box warn hidden" role="alert" style="margin:0 0 12px"><b>Modo de teste:</b> neste servidor os dados são apagados sempre que ele reinicia, é atualizado ou fica um tempo sem uso. Use apenas dados fictícios. Para uso real, ative o armazenamento permanente (veja o README).</div>
-<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
-<div><h1>Estoque por data</h1>
-<p class="sub">Consulte a disponibilidade em qualquer período, considerando devoluções e renovações.</p></div>
-<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-<div class="topo-user"><small id="userDisplay" style="font-weight:700;color:var(--ink)"></small><button class="g" id="btnLogout">Sair</button></div>
-<button class="g" id="tema" style="white-space:nowrap"></button>
-<small id="dbStatus">Conectando…</small></div>
+
+<div
+  id="avisoTeste"
+  class="box warn hidden"
+  role="alert"
+  style="margin:0 0 12px">
+
+<b>Modo de teste:</b>
+neste servidor os dados são apagados sempre que ele reinicia,
+é atualizado ou fica um tempo sem uso.
+Use apenas dados fictícios.
+Para uso real, ative o armazenamento permanente.
+
 </div>
+
+
+<div
+  style="
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:10px">
+
+<div>
+
+<h1>Estoque por data</h1>
+
+<p class="sub">
+Consulte a disponibilidade em qualquer período,
+considerando devoluções e renovações.
+</p>
+
+</div>
+
+<div
+  style="
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:6px">
+
+<div class="topo-user">
+
+<small
+  id="userDisplay"
+  style="
+    font-weight:700;
+    color:var(--ink)">
+</small>
+
+<button
+  class="g"
+  id="btnLogout">
+  Sair
+</button>
+
+</div>
+
+<button
+  class="g"
+  id="tema"
+  style="white-space:nowrap">
+</button>
+
+<small id="dbStatus">
+Conectando…
+</small>
+
+</div>
+
+</div>
+
+
+<!-- =========================================================
+     MENU
+========================================================= -->
+
 <nav role="tablist">
-<button role="tab" data-t="disp" aria-selected="true">Disponibilidade</button>
-<button role="tab" data-t="nova" aria-selected="false">Nova locação</button>
-<button role="tab" data-t="loc" aria-selected="false">Locações</button>
-<button role="tab" data-t="hist" aria-selected="false">Histórico</button>
-<button role="tab" data-t="man" aria-selected="false">Manutenção</button>
-<button role="tab" data-t="eq" aria-selected="false">Equipamentos</button>
-<button role="tab" data-t="dados" aria-selected="false">Dados</button>
-<button role="tab" data-t="usr" aria-selected="false" id="tabUsr" class="hidden">Usuários</button>
+
+<button
+  role="tab"
+  data-t="disp"
+  aria-selected="true">
+Disponibilidade
+</button>
+
+<button
+  role="tab"
+  data-t="nova"
+  aria-selected="false">
+Nova locação
+</button>
+
+<button
+  role="tab"
+  data-t="loc"
+  aria-selected="false">
+Locações
+</button>
+
+<button
+  role="tab"
+  data-t="hist"
+  aria-selected="false">
+Histórico
+</button>
+
+<button
+  role="tab"
+  data-t="man"
+  aria-selected="false">
+Manutenção
+</button>
+
+<button
+  role="tab"
+  data-t="eq"
+  aria-selected="false">
+Equipamentos
+</button>
+
+<button
+  role="tab"
+  data-t="dados"
+  aria-selected="false">
+Dados
+</button>
+
+<button
+  role="tab"
+  data-t="usr"
+  aria-selected="false"
+  id="tabUsr"
+  class="hidden">
+Usuários
+</button>
+
 </nav>
 
+
+<!-- =========================================================
+     DISPONIBILIDADE
+========================================================= -->
+
 <div id="disp">
+
 <section>
+
 <h2>Consultar período</h2>
+
 <div class="row">
-<label>Equipamento<select id="qEq"></select></label>
-<label>Quantidade<input id="qQtd" type="number" min="1" value="1"></label>
-<label>Início<input id="qIni" type="date"></label>
-<label>Fim<input id="qFim" type="date"></label>
-<button class="b" id="qGo">Consultar</button>
-<button class="g" id="qClr">Limpar</button>
+
+<label>
+Equipamento
+<select id="qEq"></select>
+</label>
+
+<label>
+Quantidade
+<input
+  id="qQtd"
+  type="number"
+  min="1"
+  value="1">
+</label>
+
+<label>
+Início
+<input
+  id="qIni"
+  type="date">
+</label>
+
+<label>
+Fim
+<input
+  id="qFim"
+  type="date">
+</label>
+
+<button
+  class="b"
+  id="qGo">
+Consultar
+</button>
+
+<button
+  class="g"
+  id="qClr">
+Limpar
+</button>
+
 </div>
+
 <div id="qOut"></div>
+
 </section>
+
 </div>
 
-<div id="nova" class="hidden">
+
+<!-- =========================================================
+     NOVA LOCAÇÃO
+========================================================= -->
+
+<div
+  id="nova"
+  class="hidden">
+
 <section>
+
 <h2>Nova locação</h2>
+
 <div class="row">
-<label>Equipamento<select id="nEq"></select></label>
-<label>Cliente<input id="nCli" placeholder="Nome do cliente"></label>
-<label>Telefone<input id="nTel" type="tel" placeholder="(11) 90000-0000"></label>
-<label>Quantidade<input id="nQtd" type="number" min="1" value="1"></label>
-<label>Início<input id="nIni" type="date"></label>
-<label>Fim<input id="nFim" type="date"></label>
-<button class="b" id="nAdd">Registrar</button>
-</div>
-<div class="msg" id="nMsg" role="status"></div>
-</section>
+
+<label>
+Equipamento
+<select id="nEq"></select>
+</label>
+
+<label>
+Cliente
+<input
+  id="nCli"
+  placeholder="Nome do cliente">
+</label>
+
+<label>
+Telefone
+<input
+  id="nTel"
+  type="tel"
+  placeholder="(11) 90000-0000">
+</label>
+
+<label>
+Quantidade
+<input
+  id="nQtd"
+  type="number"
+  min="1"
+  value="1">
+</label>
+
+<label>
+Início
+<input
+  id="nIni"
+  type="date">
+</label>
+
+<label>
+Fim
+<input
+  id="nFim"
+  type="date">
+</label>
+
+<button
+  class="b"
+  id="nAdd">
+Registrar
+</button>
+
 </div>
 
-<div id="loc" class="hidden">
-<section id="edSec" class="hidden">
+<div
+  class="msg"
+  id="nMsg"
+  role="status">
+</div>
+
+</section>
+
+</div>
+
+
+<!-- =========================================================
+     LOCAÇÕES
+========================================================= -->
+
+<div
+  id="loc"
+  class="hidden">
+
+
+<!-- EDIÇÃO -->
+
+<section
+  id="edSec"
+  class="hidden">
+
 <h2>Editar locação</h2>
+
 <div class="row">
-<label>Equipamento<select id="edEq"></select></label>
-<label>Cliente<input id="edCli"></label>
-<label>Telefone<input id="edTel" type="tel"></label>
-<label>Quantidade<input id="edQtd" type="number" min="1"></label>
-<label>Início<input id="edIni" type="date"></label>
-<label>Fim<input id="edFim" type="date"></label>
+
+<label>
+Equipamento
+<select id="edEq"></select>
+</label>
+
+<label>
+Cliente
+<input id="edCli">
+</label>
+
+<label>
+Telefone
+<input
+  id="edTel"
+  type="tel">
+</label>
+
+<label>
+Quantidade
+<input
+  id="edQtd"
+  type="number"
+  min="1">
+</label>
+
+<label>
+Início
+<input
+  id="edIni"
+  type="date">
+</label>
+
+<label>
+Fim
+<input
+  id="edFim"
+  type="date">
+</label>
+
 </div>
-<div class="row" style="margin-top:12px">
-<button class="b" id="edSave">Salvar alterações</button>
-<button class="g" id="edCancel">Cancelar</button>
-<button class="g d hidden" id="edUndo">Desfazer confirmação</button>
+
+<div
+  class="row"
+  style="margin-top:12px">
+
+<button
+  class="b"
+  id="edSave">
+Salvar alterações
+</button>
+
+<button
+  class="g"
+  id="edCancel">
+Cancelar
+</button>
+
+<button
+  class="g d hidden"
+  id="edUndo">
+Desfazer confirmação
+</button>
+
 </div>
-<div class="msg" id="edMsg" role="status"></div>
+
+<div
+  class="msg"
+  id="edMsg"
+  role="status">
+</div>
+
 </section>
+
+
+<!-- MOVIMENTAÇÃO DO DIA -->
+
 <section>
+
 <h2>Movimentação do dia</h2>
+
 <div class="row">
-<button class="g" id="dPrev">Dia anterior</button>
-<label>Data<input id="dDia" type="date"></label>
-<button class="g" id="dNext">Próximo dia</button>
-<button class="g" id="dHoje">Hoje</button>
+
+<button
+  class="g"
+  id="dPrev">
+Dia anterior
+</button>
+
+<label>
+Data
+<input
+  id="dDia"
+  type="date">
+</label>
+
+<button
+  class="g"
+  id="dNext">
+Próximo dia
+</button>
+
+<button
+  class="g"
+  id="dHoje">
+Hoje
+</button>
+
 </div>
-<div class="cols" id="dOut"></div>
+
+<div
+  class="cols"
+  id="dOut">
+</div>
+
 </section>
+
+
+<!-- LISTA DE LOCAÇÕES -->
+
 <section>
+
 <h2>Locações registradas</h2>
-<div class="scroll"><table><thead><tr><th>Equipamento</th><th>Cliente</th><th>Qtd</th><th>Período</th><th>Renovação / status</th><th>Encerramento</th></tr></thead><tbody id="lTb"></tbody></table></div>
-<div class="msg" id="lMsg" role="status"></div>
-</section>
+
+<div class="row">
+
+<label>
+Pesquisar cliente
+
+<input
+  id="lBuscaCli"
+  type="search"
+  placeholder="Digite o nome do cliente">
+
+</label>
+
+<button
+  class="g"
+  id="lBuscaLimpar">
+Limpar pesquisa
+</button>
+
 </div>
 
-<div id="hist" class="hidden">
-<section>
-<h2>Devoluções e retiradas confirmadas</h2>
-<div class="row">
-<label>Tipo<select id="hTipo"><option value="">Todas</option><option value="Devolução">Devoluções</option><option value="Retirada">Retiradas</option></select></label>
-<label>Equipamento<select id="hEq"></select></label>
-<label>De<input id="hDe" type="date"></label>
-<label>Até<input id="hAte" type="date"></label>
-<label>Cliente ou telefone<input id="hCli" placeholder="Nome ou telefone"></label>
-<button class="b" id="hGo">Pesquisar</button>
-<button class="g" id="hClr">Limpar</button>
+<div
+  class="msg"
+  id="lBuscaMsg"
+  role="status"
+  style="margin-bottom:10px">
 </div>
-<small>Preencha só o que precisar e clique em Pesquisar. Campos em branco não filtram nada, e sem filtros aparecem todos os registros.</small>
+
+<div class="scroll">
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>
+Equipamento
+</th>
+
+<th>
+Cliente
+</th>
+
+<th>
+Qtd
+</th>
+
+<th>
+Período
+</th>
+
+<th>
+Status / renovação
+</th>
+
+<th>
+Encerramento
+</th>
+
+</tr>
+
+</thead>
+
+<tbody id="lTb"></tbody>
+
+</table>
+
+</div>
+
+<div
+  class="msg"
+  id="lMsg"
+  role="status">
+</div>
+
+</section>
+
+</div>
+
+
+<!-- =========================================================
+     HISTÓRICO
+========================================================= -->
+
+<div
+  id="hist"
+  class="hidden">
+
+<section>
+
+<h2>
+Devoluções e retiradas confirmadas
+</h2>
+
+<div class="row">
+
+<label>
+Tipo
+
+<select id="hTipo">
+
+<option value="">
+Todas
+</option>
+
+<option value="Devolução">
+Devoluções
+</option>
+
+<option value="Retirada">
+Retiradas
+</option>
+
+</select>
+
+</label>
+
+<label>
+Equipamento
+<select id="hEq"></select>
+</label>
+
+<label>
+De
+<input
+  id="hDe"
+  type="date">
+</label>
+
+<label>
+Até
+<input
+  id="hAte"
+  type="date">
+</label>
+
+<label>
+Cliente ou telefone
+<input
+  id="hCli"
+  placeholder="Nome ou telefone">
+</label>
+
+<button
+  class="b"
+  id="hGo">
+Pesquisar
+</button>
+
+<button
+  class="g"
+  id="hClr">
+Limpar
+</button>
+
+</div>
+
+<small>
+Preencha só o que precisar e clique em Pesquisar.
+Campos em branco não filtram nada,
+e sem filtros aparecem todos os registros.
+</small>
+
 <div id="hOut"></div>
+
 </section>
+
 </div>
 
-<div id="man" class="hidden">
+
+<!-- =========================================================
+     MANUTENÇÃO
+========================================================= -->
+
+<div
+  id="man"
+  class="hidden">
+
 <section>
-<h2>Registrar equipamento em manutenção</h2>
+
+<h2>
+Registrar equipamento em manutenção
+</h2>
+
 <div class="row">
-<label>Equipamento<select id="mEq"></select></label>
-<label>Quantidade<input id="mQtd" type="number" min="1" value="1"></label>
-<label>Início<input id="mIni" type="date"></label>
-<label>Previsão de retorno (opcional)<input id="mFim" type="date"></label>
-<label>Motivo<input id="mMot" placeholder="Ex.: compressor com defeito"></label>
-<button class="b" id="mAdd">Registrar</button>
-</div>
-<div class="msg" id="mMsg" role="status"></div>
-<small>Enquanto estiver em manutenção, a unidade é descontada do estoque disponível. Ela volta a contar na data de retorno.</small>
-</section>
-<section>
-<h2>Equipamentos em manutenção</h2>
-<div id="mResumo" class="msg" style="margin:0 0 10px"></div>
-<div class="scroll"><table><thead><tr><th>Equipamento</th><th>Qtd</th><th>Período</th><th>Motivo</th><th>Situação</th><th></th></tr></thead><tbody id="mTb"></tbody></table></div>
-<div class="msg" id="mLst" role="status"></div>
-</section>
+
+<label>
+Equipamento
+<select id="mEq"></select>
+</label>
+
+<label>
+Quantidade
+<input
+  id="mQtd"
+  type="number"
+  min="1"
+  value="1">
+</label>
+
+<label>
+Início
+<input
+  id="mIni"
+  type="date">
+</label>
+
+<label>
+Previsão de retorno (opcional)
+<input
+  id="mFim"
+  type="date">
+</label>
+
+<label>
+Motivo
+<input
+  id="mMot"
+  placeholder="Ex.: compressor com defeito">
+</label>
+
+<button
+  class="b"
+  id="mAdd">
+Registrar
+</button>
+
 </div>
 
-<div id="eq" class="hidden">
-<section id="edEqSec" class="hidden">
-<h2>Editar equipamento</h2>
-<div class="row">
-<label>Nome do equipamento<input id="edEqNome"></label>
-<label>Quantidade total<input id="edEqTot" type="number" min="0"></label>
+<div
+  class="msg"
+  id="mMsg"
+  role="status">
 </div>
-<div class="row" style="margin-top:12px">
-<button class="b" id="edEqSave">Salvar alterações</button>
-<button class="g" id="edEqCancel">Cancelar</button>
-</div>
-<div class="msg" id="edEqMsg" role="status"></div>
+
+<small>
+Enquanto estiver em manutenção,
+a unidade é descontada do estoque disponível.
+Ela volta a contar na data de retorno.
+</small>
+
 </section>
+
+
 <section>
-<h2>Equipamentos e estoque</h2>
+
+<h2>
+Equipamentos em manutenção
+</h2>
+
+<div
+  id="mResumo"
+  class="msg"
+  style="margin:0 0 10px">
+</div>
+
+<div class="scroll">
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Equipamento</th>
+<th>Qtd</th>
+<th>Período</th>
+<th>Motivo</th>
+<th>Situação</th>
+<th></th>
+
+</tr>
+
+</thead>
+
+<tbody id="mTb"></tbody>
+
+</table>
+
+</div>
+
+<div
+  class="msg"
+  id="mLst"
+  role="status">
+</div>
+
+</section>
+
+</div>
+
+
+<!-- =========================================================
+     EQUIPAMENTOS
+========================================================= -->
+
+<div
+  id="eq"
+  class="hidden">
+
+
+<!-- PESQUISA E FILTRO -->
+
+<section>
+
+<h2>
+Pesquisar equipamentos
+</h2>
+
+<div class="row">
+
+<label>
+Nome do equipamento
+
+<input
+  id="eBusca"
+  type="search"
+  placeholder="Digite o nome do equipamento">
+
+</label>
+
+<label>
+Categoria
+
+<select id="eCategoriaFiltro">
+
+<option value="">
+Todas as categorias
+</option>
+
+</select>
+
+</label>
+
+<button
+  class="g"
+  id="eBuscaLimpar">
+Limpar filtros
+</button>
+
+</div>
+
+<div
+  id="eResumo"
+  class="msg"
+  style="margin-top:10px">
+</div>
+
+</section>
+
+
+<!-- EQUIPAMENTOS -->
+
+<section>
+
+<h2>
+Equipamentos e estoque
+</h2>
+
 <p class="muted">
-  Os números desta tabela são referentes a <b>hoje</b>. Manutenções futuras aparecem somente nas consultas dos períodos em que estarão ativas.
+
+Os números desta tabela são referentes a
+<b>hoje</b>.
+Manutenções futuras aparecem somente nas consultas
+dos períodos em que estarão ativas.
+
 </p>
 
 <div class="scroll">
+
 <table>
+
 <thead>
+
 <tr>
-<th>Equipamento</th>
-<th>Total</th>
-<th>Disponível hoje</th>
-<th>Alugado hoje</th>
-<th>Manutenção hoje</th>
-<th>Ações</th>
+
+<th>
+Equipamento
+</th>
+
+<th>
+Categoria
+</th>
+
+<th>
+Total
+</th>
+
+<th>
+Disponível hoje
+</th>
+
+<th>
+Alugado hoje
+</th>
+
+<th>
+Manutenção hoje
+</th>
+
+<th>
+Ações
+</th>
+
 </tr>
+
 </thead>
+
 <tbody id="eTb"></tbody>
+
 </table>
+
 </div>
 
-<div class="row" style="margin-top:12px">
-<label>Novo equipamento<input id="eNome" placeholder="Ex.: Forno combinado"></label>
-<label>Quantidade total<input id="eTot" type="number" min="0" value="1"></label>
-<button class="b" id="eAdd">Adicionar</button>
-</div>
 
-<div class="msg" id="eMsg" role="status"></div>
+<!-- NOVO EQUIPAMENTO -->
 
-<label style="flex-direction:row;align-items:center;gap:8px;margin-top:14px">
-<input type="checkbox" id="cfgMd" style="width:auto">
-Devolução libera o equipamento no mesmo dia (outra locação pode começar na data em que esta termina)
+<div
+  class="row"
+  style="margin-top:12px">
+
+<label>
+Nome do equipamento
+
+<input
+  id="eNome"
+  placeholder="Ex.: Forno combinado">
+
 </label>
-</section>
-</div>
-<div id="dados" class="hidden">
-<section>
-<h2>Backup dos dados</h2>
-<p style="margin:0 0 10px;color:var(--mut)">Os dados ficam salvos no servidor do escritório. Baixe um backup com frequência, principalmente antes de trocar de computador ou fazer manutenção no sistema.</p>
-<div id="bkInfo" class="msg" style="margin:0 0 10px"></div>
-<div class="row">
-<button class="b" id="bkExp">Exportar backup</button>
-<label>Importar backup (.json)<input type="file" id="bkFile" accept=".json,application/json"></label>
-</div>
-<div id="bkMsg" class="msg" style="white-space:pre-wrap" role="status"></div>
-<div id="bkAct" class="row" style="margin-top:8px"></div>
-<textarea id="bkTxt" class="hidden" readonly rows="6" style="width:100%;margin-top:8px;font:12px monospace;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px"></textarea>
-</section>
-<section>
-<h2>Importar planilha (CSV)</h2>
-<p style="margin:0 0 10px;color:var(--mut)">No Excel: Arquivo, Salvar como, CSV. Baixe os modelos para ver as colunas. Datas no formato dd/mm/aaaa. A importação de locações não bloqueia por falta de estoque, pois são locações que já existem.</p>
-<div class="row"><button class="g" id="mdEq">Baixar modelo de equipamentos</button><button class="g" id="mdLoc">Baixar modelo de locações</button></div>
-<div class="row" style="margin-top:12px">
-<label>Equipamentos (.csv)<input type="file" id="csvEq" accept=".csv,text/csv,.txt"></label>
-<label>Locações em andamento (.csv)<input type="file" id="csvLoc" accept=".csv,text/csv,.txt"></label>
-</div>
-<div id="csvMsg" class="msg" style="white-space:pre-wrap" role="status"></div>
-</section>
-<section id="bkDbBox" class="hidden">
-<h2>Cópia completa do banco (administrador)</h2>
-<p style="margin:0 0 10px;color:var(--mut)">Baixa o arquivo do banco com locações, equipamentos, manutenção, usuários e registro de alterações. Guarde em local seguro: ele contém dados de clientes.</p>
-<button class="b" id="bkDb">Baixar cópia do banco</button>
-</section>
-<section>
-<h2>Minha conta</h2>
-<div class="row">
-<label>Senha atual<input id="pwAtual" type="password" autocomplete="current-password"></label>
-<label>Nova senha (mín. 10 caracteres)<input id="pwNova" type="password" autocomplete="new-password"></label>
-<label>Repita a nova senha<input id="pwConf" type="password" autocomplete="new-password"></label>
-<button class="b" id="pwGo">Alterar senha</button>
-</div>
-<div class="msg" id="pwMsg" role="status"></div>
-</section>
+
+<label>
+Categoria
+
+<select id="eCategoria"></select>
+
+</label>
+
+<label>
+Quantidade total
+
+<input
+  id="eTot"
+  type="number"
+  min="0"
+  value="1">
+
+</label>
+
+<button
+  class="b"
+  id="eAdd">
+Adicionar
+</button>
+
 </div>
 
-<div id="usr" class="hidden">
-<section>
-<h2>Usuários</h2>
-<div class="row">
-<label>Usuário<input id="uNome" autocomplete="off" placeholder="Ex.: maria"></label>
-<label>Senha inicial (mín. 10)<input id="uSenha" type="password" autocomplete="new-password"></label>
-<label>Perfil<select id="uPerfil"><option value="0">Usuário</option><option value="1">Administrador</option></select></label>
-<button class="b" id="uAdd">Cadastrar</button>
-</div>
-<div class="msg" id="uMsg" role="status"></div>
-<div class="scroll" style="margin-top:12px"><table style="min-width:600px"><thead><tr><th>Usuário</th><th>Perfil</th><th>Situação</th><th>Criado em</th><th></th></tr></thead><tbody id="uTb"></tbody></table></div>
-</section>
-<section>
-<h2>Registro de alterações</h2>
-<div class="row" style="margin-bottom:10px"><button class="g" id="aAtual">Atualizar</button></div>
-<div class="scroll"><table style="min-width:520px"><thead><tr><th>Quando</th><th>Quem</th><th>O que foi feito</th></tr></thead><tbody id="aTb"></tbody></table></div>
-</section>
+<div
+  class="msg"
+  id="eMsg"
+  role="status">
 </div>
 
-<small>Os dados ficam salvos no servidor do escritório. A data final da locação conta como dia de uso; o equipamento volta ao estoque no dia seguinte.</small>
+
+<label
+  style="
+    flex-direction:row;
+    align-items:center;
+    gap:8px;
+    margin-top:14px">
+
+<input
+  type="checkbox"
+  id="cfgMd"
+  style="width:auto">
+
+Devolução libera o equipamento no mesmo dia
+(outra locação pode começar na data em que esta termina)
+
+</label>
+
+</section>
+
+
+<!-- CATEGORIAS -->
+
+<section>
+
+<h2>
+Categorias
+</h2>
+
+<p style="margin-top:0;color:var(--mut)">
+
+Crie categorias personalizadas para organizar,
+filtrar e visualizar os equipamentos.
+A categoria <b>Sem categoria</b> é reservada pelo sistema
+e não pode ser excluída.
+
+</p>
+
+<div class="row">
+
+<label>
+Nova categoria
+
+<input
+  id="catNome"
+  placeholder="Ex.: Cozinha">
+
+</label>
+
+<button
+  class="b"
+  id="catAdd">
+Adicionar categoria
+</button>
+
 </div>
+
+<div
+  class="msg"
+  id="catMsg"
+  role="status">
+</div>
+
+<div class="scroll">
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>
+Categoria
+</th>
+
+<th>
+Equipamentos
+</th>
+
+<th>
+Ações
+</th>
+
+</tr>
+
+</thead>
+
+<tbody id="catTb"></tbody>
+
+</table>
+
+</div>
+
+</section>
+
+</div>
+
+
+<!-- =========================================================
+     DADOS
+========================================================= -->
+
+<div
+  id="dados"
+  class="hidden">
+
+<section>
+
+<h2>
+Backup dos dados
+</h2>
+
+<p
+  style="
+    margin:0 0 10px;
+    color:var(--mut)">
+
+Os dados ficam salvos no servidor do escritório.
+Baixe um backup com frequência,
+principalmente antes de trocar de computador
+ou fazer manutenção no sistema.
+
+</p>
+
+<div
+  id="bkInfo"
+  class="msg"
+  style="margin:0 0 10px">
+</div>
+
+<div class="row">
+
+<button
+  class="b"
+  id="bkExp">
+Exportar backup
+</button>
+
+<label>
+Importar backup (.json)
+
+<input
+  type="file"
+  id="bkFile"
+  accept=".json,application/json">
+
+</label>
+
+</div>
+
+<div
+  id="bkMsg"
+  class="msg"
+  style="white-space:pre-wrap"
+  role="status">
+</div>
+
+<div
+  id="bkAct"
+  class="row"
+  style="margin-top:8px">
+</div>
+
+<textarea
+  id="bkTxt"
+  class="hidden"
+  readonly
+  rows="6"
+  style="
+    width:100%;
+    margin-top:8px;
+    font:12px monospace;
+    background:var(--bg);
+    color:var(--ink);
+    border:1px solid var(--line);
+    border-radius:6px">
+</textarea>
+
+</section>
+
+
+<section>
+
+<h2>
+Importar planilha (CSV)
+</h2>
+
+<p
+  style="
+    margin:0 0 10px;
+    color:var(--mut)">
+
+No Excel: Arquivo, Salvar como, CSV.
+Baixe os modelos para ver as colunas.
+Datas no formato dd/mm/aaaa.
+A importação de locações não bloqueia por falta de estoque,
+pois são locações que já existem.
+
+</p>
+
+<div class="row">
+
+<button
+  class="g"
+  id="mdEq">
+Baixar modelo de equipamentos
+</button>
+
+<button
+  class="g"
+  id="mdLoc">
+Baixar modelo de locações
+</button>
+
+</div>
+
+<div
+  class="row"
+  style="margin-top:12px">
+
+<label>
+Equipamentos (.csv)
+
+<input
+  type="file"
+  id="csvEq"
+  accept=".csv,text/csv,.txt">
+
+</label>
+
+<label>
+Locações em andamento (.csv)
+
+<input
+  type="file"
+  id="csvLoc"
+  accept=".csv,text/csv,.txt">
+
+</label>
+
+</div>
+
+<div
+  id="csvMsg"
+  class="msg"
+  style="white-space:pre-wrap"
+  role="status">
+</div>
+
+</section>
+
+
+<section
+  id="bkDbBox"
+  class="hidden">
+
+<h2>
+Cópia completa do banco (administrador)
+</h2>
+
+<p
+  style="
+    margin:0 0 10px;
+    color:var(--mut)">
+
+Baixa o arquivo do banco com locações,
+equipamentos, manutenção, usuários e registro de alterações.
+Guarde em local seguro: ele contém dados de clientes.
+
+</p>
+
+<button
+  class="b"
+  id="bkDb">
+Baixar cópia do banco
+</button>
+
+</section>
+
+
+<section>
+
+<h2>
+Minha conta
+</h2>
+
+<div class="row">
+
+<label>
+Senha atual
+
+<input
+  id="pwAtual"
+  type="password"
+  autocomplete="current-password">
+
+</label>
+
+<label>
+Nova senha (mín. 10 caracteres)
+
+<input
+  id="pwNova"
+  type="password"
+  autocomplete="new-password">
+
+</label>
+
+<label>
+Repita a nova senha
+
+<input
+  id="pwConf"
+  type="password"
+  autocomplete="new-password">
+
+</label>
+
+<button
+  class="b"
+  id="pwGo">
+Alterar senha
+</button>
+
+</div>
+
+<div
+  class="msg"
+  id="pwMsg"
+  role="status">
+</div>
+
+</section>
+
+</div>
+
+
+<!-- =========================================================
+     USUÁRIOS
+========================================================= -->
+
+<div
+  id="usr"
+  class="hidden">
+
+<section>
+
+<h2>
+Usuários
+</h2>
+
+<div class="row">
+
+<label>
+Usuário
+
+<input
+  id="uNome"
+  autocomplete="off"
+  placeholder="Ex.: maria">
+
+</label>
+
+<label>
+Senha inicial (mín. 10)
+
+<input
+  id="uSenha"
+  type="password"
+  autocomplete="new-password">
+
+</label>
+
+<label>
+Perfil
+
+<select id="uPerfil">
+
+<option value="0">
+Usuário
+</option>
+
+<option value="1">
+Administrador
+</option>
+
+</select>
+
+</label>
+
+<button
+  class="b"
+  id="uAdd">
+Cadastrar
+</button>
+
+</div>
+
+<div
+  class="msg"
+  id="uMsg"
+  role="status">
+</div>
+
+<div
+  class="scroll"
+  style="margin-top:12px">
+
+<table
+  style="min-width:600px">
+
+<thead>
+
+<tr>
+
+<th>Usuário</th>
+<th>Perfil</th>
+<th>Situação</th>
+<th>Criado em</th>
+<th></th>
+
+</tr>
+
+</thead>
+
+<tbody id="uTb"></tbody>
+
+</table>
+
+</div>
+
+</section>
+
+
+<section>
+
+<h2>
+Registro de alterações
+</h2>
+
+<div
+  class="row"
+  style="margin-bottom:10px">
+
+<button
+  class="g"
+  id="aAtual">
+Atualizar
+</button>
+
+</div>
+
+<div class="scroll">
+
+<table
+  style="min-width:520px">
+
+<thead>
+
+<tr>
+
+<th>Quando</th>
+<th>Quem</th>
+<th>O que foi feito</th>
+
+</tr>
+
+</thead>
+
+<tbody id="aTb"></tbody>
+
+</table>
+
+</div>
+
+</section>
+
+</div>
+
+
+<small>
+
+Os dados ficam salvos no servidor do escritório.
+A data final da locação conta como dia de uso;
+o equipamento volta ao estoque no dia seguinte.
+
+</small>
+
+</div>
+
 </main>
-<script src="{{ url_for('static', filename='script.js') }}?v={{ v }}"></script>
+
+
+<script
+  src="{{ url_for('static', filename='script.js') }}?v={{ v }}">
+</script>
+
 </body>
+
 </html>
