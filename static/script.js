@@ -2530,6 +2530,8 @@ function renderEq(){
     ?S.man
     :[];
 
+  // Garante que equipamentos antigos
+  // tenham uma categoria válida.
   garantirCategorias();
 
   preencherCategorias();
@@ -2550,9 +2552,7 @@ function renderEq(){
         busca &&
         !nrm(e.nome||"").includes(busca)
       ){
-
         return false;
-
       }
 
       if(
@@ -2560,9 +2560,7 @@ function renderEq(){
         String(e.categoriaId||"sem-categoria")!==
         String(catFiltro)
       ){
-
         return false;
-
       }
 
       return true;
@@ -2622,6 +2620,38 @@ function renderEq(){
           totalEq-alug-man
         );
 
+      /*
+       * Categoria atual do equipamento.
+       *
+       * Equipamentos antigos que ainda não possuem
+       * categoriaId serão automaticamente tratados
+       * como "sem-categoria".
+       */
+      const categoriaAtual=
+        e.categoriaId||
+        "sem-categoria";
+
+      /*
+       * Monta o select diretamente na tabela.
+       *
+       * Dessa forma equipamentos antigos também
+       * podem receber uma categoria.
+       */
+      const categoriaOptions=
+        S.categorias
+          .map(c=>`
+            <option
+              value="${esc(c.id)}"
+              ${
+                String(c.id)===String(categoriaAtual)
+                ?"selected"
+                :""
+              }>
+              ${esc(c.nome)}
+            </option>
+          `)
+          .join("");
+
       return `
         <tr>
 
@@ -2643,13 +2673,17 @@ function renderEq(){
           </td>
 
           <td>
-            <span class="tag">
-              ${esc(
-                nomeCategoria(
-                  e.categoriaId
-                )
-              )}
-            </span>
+
+            <select
+              data-cat-eq="${e.id}"
+              style="
+                min-width:170px;
+                max-width:240px;">
+
+              ${categoriaOptions}
+
+            </select>
+
           </td>
 
           <td>
@@ -2664,11 +2698,17 @@ function renderEq(){
 
           </td>
 
-          <td><b>${disp}</b></td>
+          <td>
+            <b>${disp}</b>
+          </td>
 
-          <td>${alug}</td>
+          <td>
+            ${alug}
+          </td>
 
-          <td>${man}</td>
+          <td>
+            ${man}
+          </td>
 
           <td>
 
@@ -2706,6 +2746,7 @@ function renderEq(){
     `
       <tr>
         <td colspan="7">
+
           ${
             busca||catFiltro
             ?
@@ -2713,12 +2754,92 @@ function renderEq(){
             :
             "Nenhum equipamento cadastrado."
           }
+
         </td>
       </tr>
     `;
 
 
-  // Quantidade
+  // ==========================================================
+  // ALTERAR CATEGORIA
+  // ==========================================================
+
+  tb
+    .querySelectorAll("[data-cat-eq]")
+    .forEach(select=>{
+
+      select.onchange=()=>{
+
+        const id=select.dataset.catEq;
+
+        const e=S.eq.find(
+          x=>String(x.id)===String(id)
+        );
+
+        if(!e)return;
+
+        const novaCategoria=
+          select.value||
+          "sem-categoria";
+
+        const categoriaAnterior=
+          e.categoriaId||
+          "sem-categoria";
+
+        if(
+          String(categoriaAnterior)===
+          String(novaCategoria)
+        ){
+          return;
+        }
+
+        /*
+         * Verifica se a categoria realmente existe.
+         */
+        const categoria=
+          S.categorias.find(
+            c=>String(c.id)===
+            String(novaCategoria)
+          );
+
+        if(!categoria){
+
+          select.value=
+            categoriaAnterior;
+
+          $("eMsg").textContent=
+            "A categoria selecionada não existe.";
+
+          return;
+
+        }
+
+        /*
+         * Atualiza o equipamento.
+         */
+        e.categoriaId=
+          novaCategoria;
+
+        save();
+
+        /*
+         * Atualiza a quantidade exibida
+         * na tela de categorias.
+         */
+        renderCategorias();
+
+        $("eMsg").textContent=
+          `Categoria de ${e.nome} alterada para "${categoria.nome}".`;
+
+      };
+
+    });
+
+
+  // ==========================================================
+  // ALTERAR QUANTIDADE
+  // ==========================================================
+
   tb
     .querySelectorAll("[data-t]")
     .forEach(i=>{
@@ -2773,7 +2894,10 @@ function renderEq(){
     });
 
 
-  // Editar nome
+  // ==========================================================
+  // EDITAR NOME
+  // ==========================================================
+
   tb
     .querySelectorAll("[data-edit-nome]")
     .forEach(b=>{
@@ -2820,7 +2944,9 @@ function renderEq(){
         input.value=e.nome;
 
         view.style.display="none";
-        input.style.display="inline-block";
+
+        input.style.display=
+          "inline-block";
 
         b.classList.add("hidden");
 
@@ -2840,7 +2966,10 @@ function renderEq(){
     });
 
 
-  // Cancelar nome
+  // ==========================================================
+  // CANCELAR EDIÇÃO DO NOME
+  // ==========================================================
+
   tb
     .querySelectorAll("[data-cancel-nome]")
     .forEach(b=>{
@@ -2893,6 +3022,7 @@ function renderEq(){
         input.value=e.nome;
 
         view.style.display="inline";
+
         input.style.display="none";
 
         editar.classList.remove(
@@ -2912,7 +3042,10 @@ function renderEq(){
     });
 
 
-  // Salvar nome
+  // ==========================================================
+  // SALVAR NOME
+  // ==========================================================
+
   tb
     .querySelectorAll("[data-save-nome]")
     .forEach(b=>{
@@ -2933,6 +3066,8 @@ function renderEq(){
           tb.querySelector(
             `[data-nome="${id}"]`
           );
+
+        if(!input)return;
 
         const novo=
           input.value.trim();
@@ -2985,7 +3120,10 @@ function renderEq(){
     });
 
 
-  // Remover
+  // ==========================================================
+  // REMOVER EQUIPAMENTO
+  // ==========================================================
+
   tb
     .querySelectorAll("[data-d]")
     .forEach(b=>{
@@ -3032,6 +3170,7 @@ function renderEq(){
 
         renderEq();
         fillSel();
+        renderCategorias();
 
         $("eMsg").textContent=
           `${e.nome} removido do cadastro.`;
@@ -3631,124 +3770,383 @@ if(bkExp){
 
 }
 
+// ============================================================
+// BACKUP E IMPORTAÇÃO
+// ============================================================
+
 let bkPend=null;
 
-const bkFile=$("bkFile");
 
-if(bkFile){
+/*
+ * Normaliza as categorias vindas de um backup.
+ */
+function normalizarCategoriasBackup(d){
 
-  bkFile.onchange=async()=>{
+  const PADRAO_ID="sem-categoria";
+  const PADRAO_NOME="Sem categoria";
 
-    const f=
-      $("bkFile").files[0];
+  if(!d.cfg) d.cfg={};
+  if(!Array.isArray(d.eq)) d.eq=[];
 
-    const m=$("bkMsg");
+  let categorias=
+    Array.isArray(d.categorias)
+    ? d.categorias
+    : (
+        Array.isArray(d.cfg.categorias)
+        ? d.cfg.categorias
+        : []
+      );
 
-    $("bkAct").innerHTML="";
+  const categoriasNormalizadas=[];
 
-    bkPend=null;
+  // 1. Processa e normaliza as categorias do backup preservando os IDs originais
+  categorias.forEach((c,i)=>{
 
-    if(!f)return;
+    if(!c) return;
 
-    try{
+    let nome="", id="";
 
-      const o=
-        JSON.parse(
-          await lerTexto(f)
-        );
+    if(typeof c === "object"){
+      nome = String(c.nome || c.name || "").trim();
+      id = String(c.id || "").trim();
+    }else{
+      nome = String(c).trim();
+    }
 
-      const d=
-        o&&o.dados||o;
+    if(!nome) return;
 
-      if(
-        !d||
-        !Array.isArray(d.eq)||
-        !Array.isArray(d.loc)
-      ){
+    // Se não houver ID explícito, gera um ID slug seguro baseado no nome
+    if(!id){
+      id = nrm(nome).replace(/\s+/g, "-");
+    }
 
-        throw 0;
+    const existente = categoriasNormalizadas.find(
+      x => String(x.id) === String(id) || nrm(x.nome) === nrm(nome)
+    );
 
-      }
+    if(!existente){
+      categoriasNormalizadas.push({ id, nome });
+    }
 
-      bkPend=d;
+  });
 
-      m.textContent=
-        `Arquivo válido: ${d.eq.length} equipamento(s), `+
-        `${d.loc.length} locação(ões), `+
-        `${(d.man||[]).length} manutenção(ões).\n`+
-        `Isso substitui todos os dados atuais.`;
+  // 2. Garante a existência da categoria padrão "Sem categoria"
+  let semCategoria = categoriasNormalizadas.find(
+    c => String(c.id) === PADRAO_ID || nrm(c.nome) === nrm(PADRAO_NOME)
+  );
 
-      $("bkAct").innerHTML=
-        `
-          <button class="b" id="bkOk">
-            Substituir dados atuais
-          </button>
+  if(!semCategoria){
+    semCategoria = { id: PADRAO_ID, nome: PADRAO_NOME };
+    categoriasNormalizadas.unshift(semCategoria);
+  }else{
+    semCategoria.id = PADRAO_ID;
+  }
 
-          <button class="g" id="bkNo">
-            Cancelar
-          </button>
-        `;
+  // 3. Mapeia as categorias dos equipamentos (suporta ID, Nome ou Propriedades legadas)
+  d.eq.forEach(e=>{
 
-      $("bkOk").onclick=()=>{
+    if(!e) return;
 
-        S=bkPend;
+    let catId = e.categoriaId ? String(e.categoriaId).trim() : "";
+    let catNome = e.categoria ? String(e.categoria).trim() : "";
 
-        S.man=S.man||[];
+    // Procura por ID ou por Nome
+    let encontrada = categoriasNormalizadas.find(c =>
+      (catId && String(c.id) === catId) ||
+      (catId && nrm(c.id) === nrm(catId)) ||
+      (catNome && nrm(c.nome) === nrm(catNome)) ||
+      (catNome && nrm(c.id) === nrm(catNome))
+    );
 
-        S.cfg=
-          S.cfg||
-          {
-            mesmoDia:true
-          };
+    // Se o equipamento possui um nome de categoria que ainda não existe no cadastro, cria-a automaticamente
+    if(!encontrada && catNome){
+      const novoId = nrm(catNome).replace(/\s+/g, "-") || `cat-${Date.now()}`;
+      encontrada = { id: novoId, nome: catNome };
+      categoriasNormalizadas.push(encontrada);
+    }
 
-        garantirCategorias();
+    // Associa o categoriaId definitivo
+    e.categoriaId = encontrada ? encontrada.id : PADRAO_ID;
 
-        bkPend=null;
+    // Limpa a propriedade antiga para evitar conflitos
+    delete e.categoria;
 
-        save();
+  });
 
-        fecharEd();
+  d.categorias = categoriasNormalizadas;
+  if(d.cfg) delete d.cfg.categorias;
 
-        fillSel();
-        renderLoc();
-        renderEq();
-        renderMan();
-        renderBk();
-        renderCategorias();
+  return d;
 
-        $("cfgMd").checked=
-          S.cfg.mesmoDia;
+}
 
-        $("bkAct").innerHTML="";
 
-        m.textContent=
-          "Backup importado. Os dados foram restaurados.";
+$("bkFile").onchange=async()=>{
 
-      };
+  const f=
+    $("bkFile").files[0];
 
-      $("bkNo").onclick=()=>{
+  const m=
+    $("bkMsg");
 
-        bkPend=null;
+  $("bkAct").innerHTML="";
 
-        $("bkAct").innerHTML="";
+  bkPend=null;
 
-        m.textContent=
-          "Importação cancelada.";
+  if(!f)return;
 
-      };
 
-    }catch(e){
+  try{
 
-      m.textContent=
-        "Não foi possível ler este arquivo. Use um backup .json exportado por esta ferramenta.";
+    /*
+     * --------------------------------------------------------
+     * Lê o arquivo
+     * --------------------------------------------------------
+     */
+
+    const o=
+      JSON.parse(
+        await lerTexto(f)
+      );
+
+    const d=
+      o&&o.dados
+      ?o.dados
+      :o;
+
+
+    /*
+     * --------------------------------------------------------
+     * Validação básica
+     * --------------------------------------------------------
+     */
+
+    if(
+      !d||
+      !Array.isArray(d.eq)||
+      !Array.isArray(d.loc)
+    ){
+
+      throw new Error(
+        "Estrutura de backup inválida."
+      );
 
     }
 
-    $("bkFile").value="";
 
-  };
+    /*
+     * --------------------------------------------------------
+     * Compatibilidade com backups antigos
+     * --------------------------------------------------------
+     */
 
-}
+    if(!Array.isArray(d.man)){
+      d.man=[];
+    }
+
+
+    if(!d.cfg){
+      d.cfg={
+        mesmoDia:true
+      };
+    }
+
+
+    /*
+     * --------------------------------------------------------
+     * Normaliza categorias
+     * --------------------------------------------------------
+     */
+
+    normalizarCategoriasBackup(d);
+
+
+    /*
+     * --------------------------------------------------------
+     * Guarda o backup preparado temporariamente.
+     *
+     * Ainda NÃO substitui os dados atuais.
+     * --------------------------------------------------------
+     */
+
+    bkPend=d;
+
+
+    /*
+     * --------------------------------------------------------
+     * Mostra resumo para o usuário
+     * --------------------------------------------------------
+     */
+
+    const qtdCategorias=
+      Array.isArray(d.categorias)
+      ?d.categorias.length
+      :0;
+
+
+    m.textContent=
+      `Arquivo válido: `+
+      `${d.eq.length} equipamento(s), `+
+      `${d.loc.length} locação(ões), `+
+      `${d.man.length} manutenção(ões), `+
+      `${qtdCategorias} categoria(s).`+
+      `\n\n`+
+      `Isso substituirá todos os dados atuais.`;
+
+
+    /*
+     * --------------------------------------------------------
+     * Botões de confirmação
+     * --------------------------------------------------------
+     */
+
+    $("bkAct").innerHTML=
+      '<button class="b" id="bkOk">Substituir dados atuais</button>'+
+      '<button class="g" id="bkNo">Cancelar</button>';
+
+
+    /*
+     * --------------------------------------------------------
+     * CONFIRMAR IMPORTAÇÃO
+     * --------------------------------------------------------
+     */
+
+    $("bkOk").onclick=()=>{
+
+      if(!bkPend)return;
+
+
+      /*
+       * Substitui os dados atuais pelos dados
+       * já normalizados.
+       */
+
+      S=bkPend;
+
+
+      /*
+       * Garantias finais.
+       */
+
+      S.eq=
+        Array.isArray(S.eq)
+        ?S.eq
+        :[];
+
+
+      S.loc=
+        Array.isArray(S.loc)
+        ?S.loc
+        :[];
+
+
+      S.man=
+        Array.isArray(S.man)
+        ?S.man
+        :[];
+
+
+      S.cfg=
+        S.cfg||
+        {mesmoDia:true};
+
+
+      /*
+       * Garante novamente a estrutura de categorias.
+       *
+       * Isso protege contra qualquer situação inesperada.
+       */
+
+      normalizarCategoriasBackup(S);
+
+
+      /*
+       * Backup já foi efetivamente importado.
+       */
+
+      bkPend=null;
+
+
+      save();
+
+
+      /*
+       * Atualiza toda a interface.
+       */
+
+      fecharEd();
+
+      fillSel();
+
+      renderLoc();
+
+      renderEq();
+
+      renderMan();
+
+      renderBk();
+
+
+      /*
+       * Atualiza configuração de mesmo dia.
+       */
+
+      $("cfgMd").checked=
+        !!S.cfg.mesmoDia;
+
+
+      $("bkAct").innerHTML="";
+
+
+      m.textContent=
+        "Backup importado com sucesso. "+
+        "Os dados e as categorias foram restaurados.";
+
+
+    };
+
+
+    /*
+     * --------------------------------------------------------
+     * CANCELAR
+     * --------------------------------------------------------
+     */
+
+    $("bkNo").onclick=()=>{
+
+      bkPend=null;
+
+      $("bkAct").innerHTML="";
+
+      m.textContent=
+        "Importação cancelada.";
+
+    };
+
+
+  }catch(e){
+
+    console.error(
+      "Erro ao importar backup:",
+      e
+    );
+
+    bkPend=null;
+
+    m.textContent=
+      "Não foi possível ler este arquivo. "+
+      "Use um backup .json exportado por esta ferramenta.";
+
+  }
+
+
+  /*
+   * Permite selecionar novamente o mesmo arquivo depois.
+   */
+
+  $("bkFile").value="";
+
+};
 
 const mdEq=$("mdEq");
 
