@@ -1,56 +1,425 @@
-:root{--onpri:#fff;--tint:#e1f0f6;--bg:#eef2f4;--card:#fff;--ink:#14232b;--mut:#5d6f78;--line:#d3dde2;--pri:#0f5e7a;--ok:#1b7a4b;--warn:#b26a00;--bad:#b3261e;--okbg:#e3f3ea;--warnbg:#fff1d9;--badbg:#fbe4e2;
-box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1a20;--card:#15262e;--ink:#e6eef1;--mut:#93a6ae;--line:#284049;--pri:#5cc0e0;--ok:#5fd394;--warn:#f0b04a;--bad:#ff8a80;--okbg:#12362a;--warnbg:#3a2e12;--badbg:#3c1a18;--onpri:#0b1a20;--tint:#1c3a46}}
-:root[data-theme="dark"]{--bg:#0e1a20;--card:#15262e;--ink:#e6eef1;--mut:#93a6ae;--line:#284049;--pri:#5cc0e0;--ok:#5fd394;--warn:#f0b04a;--bad:#ff8a80;--okbg:#12362a;--warnbg:#3a2e12;--badbg:#3c1a18;--onpri:#0b1a20;--tint:#1c3a46}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif}
-main{max-width:1400px;margin:0 auto;padding:20px clamp(16px,3vw,40px)}
-h1{font-size:22px;margin:8px 0 2px}
-p.sub{margin:0 0 14px;color:var(--mut)}
-nav{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
-nav button{border:1.5px solid var(--pri);background:var(--card);color:var(--ink);padding:10px 16px;border-radius:8px;font:inherit;font-weight:600;cursor:pointer}
-nav button[aria-selected=true]{background:var(--pri);color:var(--onpri);border-color:var(--pri)}
-:focus-visible{outline:3px solid var(--pri);outline-offset:2px}
-section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px}
-h2{font-size:17px;margin:0 0 10px}
-.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;align-items:end}
-label{display:flex;flex-direction:column;font-size:14px;color:var(--mut);gap:3px}
-input,select{font:inherit;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);min-width:0;width:100%}
-button.b{background:var(--pri);color:var(--onpri);border:0;border-radius:8px;padding:11px 20px;font:inherit;font-weight:700;cursor:pointer;box-shadow:0 2px 0 rgba(0,0,0,.28)}
-button.g{background:var(--tint);color:var(--pri);border:1.5px solid var(--pri);border-radius:8px;padding:8px 13px;font:inherit;font-weight:600;cursor:pointer}
-button.g.d{color:var(--bad);border-color:var(--bad);background:var(--badbg)}
-button:hover{filter:brightness(1.1)}
-button:active{transform:translateY(1px)}
-#lTb td:first-child,#eTb td:first-child,#hOut td:nth-child(3),#hOut td:nth-child(5){font-weight:700}
-#lTb small,#lTb .warn{font-weight:400}
-.it small{color:var(--ink)}
-.box{border-radius:8px;padding:12px;margin-top:12px}
-.ok{background:var(--okbg);color:var(--ok)}.warn{background:var(--warnbg);color:var(--warn)}.bad{background:var(--badbg);color:var(--bad)}
-.big{font-size:26px;font-weight:700}
-.scroll{overflow-x:auto}
-table{border-collapse:collapse;width:100%;min-width:680px}
-th,td{text-align:left;padding:8px;border-bottom:1px solid var(--line);vertical-align:middle}
-th{font-size:13px;color:var(--mut);font-weight:600}
-.msg{margin-top:10px;font-weight:600}
-.hidden{display:none}
-.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-top:12px}
-.col{border:1px solid var(--line);border-radius:8px;padding:10px 12px}
-.col h3{margin:0 0 6px;font-size:15px}
-.it{padding:7px 0;border-top:1px solid var(--line)}
-.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px;margin-top:4px}
-small{color:var(--mut)}
-.tag,button{white-space:nowrap}
-.cols{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
-#nova section{max-width:1100px}
-/* login */
-.login{max-width:420px;margin:8vh auto 0}
-.login h1{text-align:center;margin-bottom:18px}
-.form-col{display:flex;flex-direction:column;gap:12px}
-.topo-user{display:flex;gap:8px;align-items:center}
-@media (min-width:1100px){
- #man:not(.hidden){display:grid;grid-template-columns:minmax(320px,380px) 1fr;gap:16px;align-items:start}
- #dados:not(.hidden),#usr:not(.hidden){display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
- #man section,#dados section,#usr section{margin-bottom:0}
- #mAdd{grid-column:1/-1}
+/* ==========================================================================
+   1. VARIÁVEIS E TEMAS
+   ========================================================================== */
+:root {
+  --onpri: #fff;
+  --tint: #e1f0f6;
+  --bg: #eef2f4;
+  --card: #fff;
+  --ink: #14232b;
+  --mut: #5d6f78;
+  --line: #d3dde2;
+  --pri: #0f5e7a;
+  --ok: #1b7a4b;
+  --warn: #b26a00;
+  --bad: #b3261e;
+  --okbg: #e3f3ea;
+  --warnbg: #fff1d9;
+  --badbg: #fbe4e2;
+
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Tema Escuro */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1a20;
+    --card: #15262e;
+    --ink: #e6eef1;
+    --mut: #93a6ae;
+    --line: #284049;
+    --pri: #5cc0e0;
+    --ok: #5fd394;
+    --warn: #f0b04a;
+    --bad: #ff8a80;
+    --okbg: #12362a;
+    --warnbg: #3a2e12;
+    --badbg: #3c1a18;
+    --onpri: #0b1a20;
+    --tint: #1c3a46;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0e1a20;
+  --card: #15262e;
+  --ink: #e6eef1;
+  --mut: #93a6ae;
+  --line: #284049;
+  --pri: #5cc0e0;
+  --ok: #5fd394;
+  --warn: #f0b04a;
+  --bad: #ff8a80;
+  --okbg: #12362a;
+  --warnbg: #3a2e12;
+  --badbg: #3c1a18;
+  --onpri: #0b1a20;
+  --tint: #1c3a46;
+}
+
+/* ==========================================================================
+   2. REGRAS GERAIS E LAYOUT
+   ========================================================================== */
+html {
+  scroll-padding-top: env(safe-area-inset-top, 0px);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.5 "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+}
+
+main {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px clamp(16px, 3vw, 40px);
+}
+
+h1 {
+  font-size: 22px;
+  margin: 8px 0 2px;
+}
+
+h2 {
+  font-size: 17px;
+  margin: 0 0 10px;
+}
+
+p.sub {
+  margin: 0 0 14px;
+  color: var(--mut);
+}
+
+small {
+  color: var(--mut);
+}
+
+.hidden {
+  display: none;
+}
+
+.tag, button {
+  white-space: nowrap;
+}
+
+:focus-visible {
+  outline: 3px solid var(--pri);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   3. NAVEGAÇÃO E SEÇÕES
+   ========================================================================== */
+nav {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+nav button {
+  border: 1.5px solid var(--pri);
+  background: var(--card);
+  color: var(--ink);
+  padding: 10px 16px;
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+nav button[aria-selected="true"] {
+  background: var(--pri);
+  color: var(--onpri);
+  border-color: var(--pri);
+}
+
+section {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+#nova section {
+  max-width: 1100px;
+}
+
+/* ==========================================================================
+   4. FORMULÁRIOS, LABELS E INPUTS
+   ========================================================================== */
+.row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  align-items: end;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+  color: var(--mut);
+  gap: 3px;
+}
+
+input, select {
+  font: inherit;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--ink);
+  min-width: 0;
+  width: 100%;
+}
+
+/* ==========================================================================
+   5. BOTÕES
+   ========================================================================== */
+button.b {
+  background: var(--pri);
+  color: var(--onpri);
+  border: 0;
+  border-radius: 8px;
+  padding: 11px 20px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.28);
+}
+
+button.g {
+  background: var(--tint);
+  color: var(--pri);
+  border: 1.5px solid var(--pri);
+  border-radius: 8px;
+  padding: 8px 13px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button.g.d {
+  color: var(--bad);
+  border-color: var(--bad);
+  background: var(--badbg);
+}
+
+button:hover {
+  filter: brightness(1.1);
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+/* ==========================================================================
+   6. TABELAS, CAIXAS E MENSAGENS
+   ========================================================================== */
+.scroll {
+  overflow-x: auto;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 680px;
+}
+
+th, td {
+  text-align: left;
+  padding: 8px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+
+th {
+  font-size: 13px;
+  color: var(--mut);
+  font-weight: 600;
+}
+
+#lTb td:first-child,
+#eTb td:first-child,
+#hOut td:nth-child(3),
+#hOut td:nth-child(5) {
+  font-weight: 700;
+}
+
+#lTb small, #lTb .warn {
+  font-weight: 400;
+}
+
+.box {
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 12px;
+}
+
+.big {
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.ok { background: var(--okbg); color: var(--ok); }
+.warn { background: var(--warnbg); color: var(--warn); }
+.bad { background: var(--badbg); color: var(--bad); }
+
+.msg {
+  margin-top: 10px;
+  font-weight: 600;
+}
+
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+/* ==========================================================================
+   7. COLUNAS E MOVIMENTAÇÃO DO DIA
+   ========================================================================== */
+.cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.col {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.col h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+}
+
+.it {
+  padding: 7px 0;
+  border-top: 1px solid var(--line);
+}
+
+.it small {
+  color: var(--ink);
+}
+
+/* ==========================================================================
+   8. TELA DE LOGIN E CABEÇALHO
+   ========================================================================== */
+.login {
+  max-width: 420px;
+  margin: 8vh auto 0;
+}
+
+.login h1 {
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.form-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.topo-user {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* ==========================================================================
+   9. MEDIA QUERIES (DESKTOP)
+   ========================================================================== */
+@media (min-width: 1280px) {
+  #man:not(.hidden) {
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+
+  #dados:not(.hidden),
+  #usr:not(.hidden) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+
+  #man section, #dados section, #usr section {
+    margin-bottom: 0;
+  }
+}
+
+/* ==========================================================================
+   10. CORREÇÃO DE LARGURAS DE COLUNAS (GRID)
+   ========================================================================== */
+
+/* Padronização dos containers .row em formulários */
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.row label {
+  flex: 1 1 140px;
+}
+
+/* Ajustes específicos de proporção por aba */
+
+/* Aba Disponibilidade */
+#disp .row label:first-child { flex: 2 1 240px; }
+#disp .row label:nth-child(2) { flex: 0.5 1 80px; }
+
+/* Aba Nova Locação */
+#nova .row label:first-child { flex: 2 1 240px; }
+#nova .row label:nth-child(2) { flex: 1.8 1 180px; }
+#nova .row label:nth-child(3) { flex: 1.2 1 140px; }
+#nova .row label:nth-child(4) { flex: 0.5 1 80px; }
+
+/* Aba Manutenção (formulário verticalizado em coluna única na esquerda) */
+#man .row {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
+#man .row label {
+  width: 100%;
+}
+
+#man .row button {
+  margin-top: 6px;
+  width: 100%;
+}
+
+/* Aba Histórico */
+#hist .row label:first-child { flex: 1 1 120px; }
+#hist .row label:nth-child(2) { flex: 2 1 220px; }
+
+/* Reseta min-width para evitar estouro de containers */
+#disp .row input,
+#nova .row input,
+#man .row input,
+#hist .row input {
+  min-width: 0 !important;
 }
