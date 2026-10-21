@@ -1115,9 +1115,11 @@ function preencherFiltroMeses() {
   const select = $("lFiltroMes");
   if (!select) return;
 
+  // Se o select já tem opções e o usuário selecionou algo (inclusive "Todos os meses"), preserva
+  const jaPreenchido = select.options.length > 1;
   const valorAtual = select.value;
-  const mesesSet = new Set();
 
+  const mesesSet = new Set();
   const hoje = hojeLocal().slice(0, 7); // Ex: '2026-10'
   mesesSet.add(hoje);
 
@@ -1150,7 +1152,8 @@ function preencherFiltroMeses() {
 
   select.innerHTML = html;
 
-  if (valorAtual) {
+  // Mantém a seleção do usuário. Se for o primeiro carregamento, marca o mês atual.
+  if (jaPreenchido) {
     select.value = valorAtual;
   } else if (mesesSet.has(hoje)) {
     select.value = hoje;
@@ -1164,7 +1167,6 @@ function preencherFiltroMeses() {
 function renderLoc(){
   renderDia();
   renderHist();
-  preencherFiltroMeses();
 
   const busca = nrm(($("lBuscaCli")?.value)||"");
   const mesFiltro = ($("lFiltroMes")?.value)||"";
@@ -2963,6 +2965,7 @@ async function iniciarApp(){
 
     garantirCategorias();
     preencherCategorias();
+    preencherFiltroMeses();
 
     $("cfgMd").checked=S.cfg.mesmoDia;
 
