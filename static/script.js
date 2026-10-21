@@ -847,7 +847,7 @@ function notaVol(l){
 
 
 // ============================================================
-// MOVIMENTAÇÃO DO DIA (AGRUPADA E COM CONTAGEM POR PEDIDOS)
+// MOVIMENTAÇÃO DO DIA (AGRUPADA E COM CONFIRMAÇÃO DE ATRASOS)
 // ============================================================
 
 function renderDia(){
@@ -880,6 +880,7 @@ function renderDia(){
   const itGroup = (g, x) => {
     const todosConfirmados = g.itens.every(i => i.conf);
     const primeiro = g.itens[0];
+    const idsGrupo = g.itens.map(i => i.id).join(",");
 
     const listaEquipamentos = g.itens.map(l => 
       `<b>${l.qtd}× ${esc(eqName(l.eq))}</b>`
@@ -888,8 +889,8 @@ function renderDia(){
     const btn = todosConfirmados
       ? `<div><span class="tag ok">✔ ${primeiro.conf.tipo} confirmada</span></div>`
       : `<div style="margin-top:6px">
-          <button class="g" data-vc-grupo="${g.chave}|Devolução">Devolução confirmada</button>
-          <button class="g" data-vc-grupo="${g.chave}|Retirada">Retirada confirmada</button>
+          <button class="g" data-vc-ids="${idsGrupo}|Devolução">Devolução confirmada</button>
+          <button class="g" data-vc-ids="${idsGrupo}|Retirada">Retirada confirmada</button>
         </div>`;
 
     const notas = g.itens.map(l => x && x.per ? notaSai(l) : x && x.vol ? notaVol(l) : "").filter(Boolean).join("");
@@ -1046,7 +1047,6 @@ function statusLocacao(l){
 }
 
 
-
 // ============================================================
 // MANUTENÇÃO
 // ============================================================
@@ -1118,7 +1118,6 @@ function preencherFiltroMeses() {
   const valorAtual = select.value;
   const mesesSet = new Set();
 
-  // Mês atual como padrão
   const hoje = hojeLocal().slice(0, 7); // Ex: '2026-10'
   mesesSet.add(hoje);
 
@@ -1151,7 +1150,6 @@ function preencherFiltroMeses() {
 
   select.innerHTML = html;
 
-  // Seleciona o mês salvo ou define o Mês Atual por padrão
   if (valorAtual) {
     select.value = valorAtual;
   } else if (mesesSet.has(hoje)) {
@@ -1160,7 +1158,7 @@ function preencherFiltroMeses() {
 }
 
 // ============================================================
-// LOCAÇÕES (ORDENADAS POR DATA DE INÍCIO COM DESTAQUE NO PERÍODO)
+// LOCAÇÕES (COM EDIÇÃO DE PEDIDO, ATRASOS E VISUALIZAÇÃO POR DATA)
 // ============================================================
 
 function renderLoc(){
@@ -1170,17 +1168,22 @@ function renderLoc(){
 
   const busca = nrm(($("lBuscaCli")?.value)||"");
   const mesFiltro = ($("lFiltroMes")?.value)||"";
+  const h0 = hojeLocal();
 
   let rows = [...S.loc];
 
-  // Exibe APENAS as locações ativas dentro do mês selecionado
+  // Exibe as locações do mês selecionado OU locações não confirmadas que estejam em atraso
   if (mesFiltro) {
     const [anoF, mesF] = mesFiltro.split("-").map(Number);
     const inicioMes = `${mesFiltro}-01`;
     const ultimoDia = new Date(anoF, mesF, 0).getDate();
     const fimMes = `${mesFiltro}-${String(ultimoDia).padStart(2, "0")}`;
 
-    rows = rows.filter(l => (l.iniOrig || l.ini) <= fimMes && l.fim >= inicioMes);
+    rows = rows.filter(l => {
+      const emAtraso = !l.conf && l.fim < h0;
+      const noMes = (l.iniOrig || l.ini) <= fimMes && l.fim >= inicioMes;
+      return noMes || emAtraso;
+    });
   }
 
   // Filtra por nome do cliente, telefone ou observação
@@ -1210,7 +1213,7 @@ function renderLoc(){
     g.itens.push(l);
   });
 
-  // ORDENAÇÃO POR DATA DE INÍCIO (crescente). Em empate de datas, ordena pelo nome do cliente.
+  // Ordenação por data de início (crescente)
   grupos.sort((a,b) => {
     const diffData = a.ini.localeCompare(b.ini);
     if (diffData !== 0) return diffData;
@@ -1232,7 +1235,6 @@ function renderLoc(){
 
         const totalQtd = g.itens.reduce((sum, item) => sum + item.qtd, 0);
 
-        // Lembrete visual se a locação foi renovada
         const renovadoHTML = (g.iniOrig && g.iniOrig !== g.ini) ? `
           <div style="margin-top:4px;">
             <span class="tag warn" style="font-size:11px; padding:2px 6px;">🔄 Renovado (Início original: ${fmt(g.iniOrig)})</span>
@@ -1267,6 +1269,7 @@ function renderLoc(){
             </td>
             <td>
               ${primeiro.conf ? "" : `<input type="date" id="cf_${grupoId}" value="${g.fim}" style="width:150px"><button class="g" data-c-grupo="${grupoId}|Devolução">Devolução confirmada</button><button class="g" data-c-grupo="${grupoId}|Retirada">Retirada confirmada</button>`}
+              <button class="g" data-edit-pedido="${primeiro.id}">Editar pedido</button>
               <button class="g" data-obs-grupo="${grupoId}">${g.obs ? "Editar obs." : "+ Obs."}</button>
               <button class="g d" data-x-grupo="${grupoId}">Excluir pedido</button>
             </td>
@@ -1277,10 +1280,17 @@ function renderLoc(){
 
   renderPesquisaCliente(grupos.length, rows.reduce((s, i) => s + i.qtd, 0));
 
-  // Ações por grupo (Obs, Renovar, Devolução, Excluir)
+  // Ações por grupo
   grupos.forEach((g, gIdx) => {
     const grupoId = `g_${gIdx}`;
 
+    // Editar Pedido Individual
+    const btnEdit = $("lTb").querySelector(`[data-edit-pedido="${g.itens[0].id}"]`);
+    if (btnEdit) {
+      btnEdit.onclick = () => { abrirEd(g.itens[0].id); };
+    }
+
+    // Modal de Obs
     const btnObs = $("lTb").querySelector(`[data-obs-grupo="${grupoId}"]`);
     if (btnObs) {
       btnObs.onclick = () => {
@@ -1326,6 +1336,7 @@ function renderLoc(){
       };
     }
 
+    // Renovar pedido
     const btnR = $("lTb").querySelector(`[data-r-grupo="${grupoId}"]`);
     if (btnR) {
       btnR.onclick = () => {
@@ -1351,6 +1362,7 @@ function renderLoc(){
       };
     }
 
+    // Confirmar Devolução ou Retirada
     const btnsC = $("lTb").querySelectorAll(`[data-c-grupo^="${grupoId}|"]`);
     btnsC.forEach(btn => {
       btn.onclick = () => {
@@ -1372,6 +1384,7 @@ function renderLoc(){
       };
     });
 
+    // Excluir pedido
     const btnX = $("lTb").querySelector(`[data-x-grupo="${grupoId}"]`);
     if (btnX) {
       btnX.onclick = () => {
@@ -2598,14 +2611,12 @@ if(dHoje){
 const dOut=$("dOut");
 if(dOut){
   dOut.onclick=e=>{
-    const b=e.target.closest("[data-vc-grupo]");
+    const b=e.target.closest("[data-vc-ids]");
     if(!b)return;
-    const [chave, tipo] = b.dataset.vcGrupo.split("|");
+    const [idsStr, tipo] = b.dataset.vcIds.split("|");
+    const ids = idsStr.split(",").map(Number);
 
-    const itensDoGrupo = S.loc.filter(l => {
-      const c = `${nrm(l.cliente)}|${nrm(l.tel||"")}|${l.ini}|${l.fim}`;
-      return c === chave;
-    });
+    const itensDoGrupo = S.loc.filter(l => ids.includes(l.id));
 
     if(!itensDoGrupo.length) return;
 
@@ -2614,12 +2625,15 @@ if(dOut){
 
     itensDoGrupo.forEach(l => {
       l.fim = l.fim < h0 ? h0 : l.fim;
-      l.conf = { tipo, data: l.fim };
+      l.conf = { tipo, data: h0 };
     });
 
     save();
     renderLoc();
-    $("lMsg").textContent = `${tipo} confirmada para todos os itens do pedido de ${esc(clienteNome)}.`;
+    renderDia();
+    
+    const msgEl = $("lMsg");
+    if(msgEl) msgEl.textContent = `${tipo} confirmada para o pedido de ${esc(clienteNome)}.`;
   };
 }
 
