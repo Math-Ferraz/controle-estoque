@@ -320,74 +320,99 @@ Limpar
      NOVA LOCAÇÃO
 ========================================================= -->
 
-<div
-  id="nova"
-  class="hidden">
+<div id="nova" class="hidden">
 
 <section>
 
 <h2>Nova locação</h2>
 
+<!-- Linha 1: Dados do Cliente, Datas e Observações -->
 <div class="row">
 
-<label>
-  Equipamento
-  <input id="nEqInput" list="nEqList" placeholder="Digite para buscar o equipamento..." style="min-width: 250px;">
-  <datalist id="nEqList"></datalist>
-  <input type="hidden" id="nEq">
-</label>
-
-<label>
+<label style="flex:1.5;">
 Cliente
-<input
-  id="nCli"
-  placeholder="Nome do cliente">
+<input id="nCli" placeholder="Nome do cliente">
 </label>
 
-<label>
+<label style="flex:1;">
 Telefone
-<input
-  id="nTel"
-  type="tel"
-  placeholder="(11) 90000-0000">
+<input id="nTel" type="tel" placeholder="(11) 90000-0000">
 </label>
 
-<label>
-Quantidade
-<input
-  id="nQtd"
-  type="number"
-  min="1"
-  value="1">
-</label>
-
-<label>
+<label style="flex:1;">
 Início
-<input
-  id="nIni"
-  type="date">
+<input id="nIni" type="date">
 </label>
 
-<label>
+<label style="flex:1;">
 Fim
-<input
-  id="nFim"
-  type="date">
+<input id="nFim" type="date">
 </label>
 
-<button
-  class="b"
-  id="nAdd">
-Registrar
+<label style="flex:2;">
+Observações
+<input id="nObs" placeholder="Ex.: Entregar às 14h, cuidar no transporte...">
+</label>
+
+<label style="flex:0.8;">
+Cor do Destaque
+<select id="nObsCor">
+  <option value="#0f5e7a" style="color:#0f5e7a; font-weight:bold;">Azul</option>
+  <option value="#b3261e" style="color:#b3261e; font-weight:bold;">Vermelho</option>
+  <option value="#1b7a4b" style="color:#1b7a4b; font-weight:bold;">Verde</option>
+  <option value="#b26a00" style="color:#b26a00; font-weight:bold;">Laranja</option>
+  <option value="#6b21a8" style="color:#6b21a8; font-weight:bold;">Roxo</option>
+</select>
+</label>
+
+</div>
+
+<!-- Linha 2: Adicionar Equipamentos à Lista Temporária -->
+<div class="row" style="margin-top:14px; padding-top:14px; border-top:1px dashed var(--line);">
+
+<label style="flex:2;">
+Equipamento
+<input id="nEqInput" list="nEqList" placeholder="Digite para buscar o equipamento...">
+<datalist id="nEqList"></datalist>
+<input type="hidden" id="nEq">
+</label>
+
+<label style="flex:0.8;">
+Quantidade
+<input id="nQtd" type="number" min="1" value="1">
+</label>
+
+<button class="g" id="nAddItem" type="button" style="margin-bottom:2px;">
++ Adicionar item
 </button>
 
 </div>
 
-<div
-  class="msg"
-  id="nMsg"
-  role="status">
+<!-- Tabela de Itens Selecionados -->
+<div id="nItensBox" style="margin-top:14px;" class="hidden">
+  <h3>Itens da locação</h3>
+  <div class="scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Equipamento</th>
+          <th>Qtd</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="nItensTb"></tbody>
+    </table>
+  </div>
 </div>
+
+<!-- Botão Registrar Todos -->
+<div class="row" style="margin-top:16px;">
+  <button class="b" id="nAdd" type="button">
+    Registrar todas as locações
+  </button>
+</div>
+
+<div class="msg" id="nMsg" role="status"></div>
 
 </section>
 
@@ -403,7 +428,7 @@ Registrar
   class="hidden">
 
 
-<!-- EDIÇÃO -->
+<!-- EDIÇÃO DE ITEM INDIVIDUAL -->
 
 <section
   id="edSec"
@@ -415,9 +440,8 @@ Registrar
 
 <label>
   Equipamento
-  <input id="nEqInput" list="nEqList" placeholder="Digite para buscar o equipamento..." style="min-width: 250px;">
-  <datalist id="nEqList"></datalist>
-  <input type="hidden" id="nEq">
+  <input id="edEqInput" list="nEqList" placeholder="Digite para buscar o equipamento..." style="min-width: 250px;">
+  <input type="hidden" id="edEq">
 </label>
 
 <label>
@@ -533,30 +557,47 @@ Hoje
 
 
 <!-- LISTA DE LOCAÇÕES -->
-
 <section>
+  <h2>Locações registradas</h2>
 
-<h2>Locações registradas</h2>
+  <div class="row" style="display:flex; gap:10px; align-items:flex-end; margin-bottom:12px;">
+    <label style="flex:1.5;">
+      Pesquisar cliente ou observação
+      <input id="lBuscaCli" type="search" placeholder="Digite para filtrar...">
+    </label>
 
-<div class="row">
+    <label style="flex:1;">
+      Filtrar por mês
+      <select id="lFiltroMes">
+        <option value="">Selecione o mês...</option>
+      </select>
+    </label>
 
-<label>
-Pesquisar cliente
+    <button class="g" id="lBuscaLimpar" style="height:38px;">
+      Limpar pesquisa
+    </button>
+  </div>
 
-<input
-  id="lBuscaCli"
-  type="search"
-  placeholder="Digite o nome do cliente">
+  <div class="msg" id="lBuscaMsg" role="status" style="margin-bottom:10px"></div>
 
-</label>
+  <div class="scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Equipamento</th>
+          <th>Cliente</th>
+          <th>Qtd</th>
+          <th>Período</th>
+          <th>Status / renovação</th>
+          <th>Encerramento</th>
+        </tr>
+      </thead>
+      <tbody id="lTb"></tbody>
+    </table>
+  </div>
 
-<button
-  class="g"
-  id="lBuscaLimpar">
-Limpar pesquisa
-</button>
-
-</div>
+  <div class="msg" id="lMsg" role="status"></div>
+</section>
 
 <div
   class="msg"
@@ -614,6 +655,34 @@ Encerramento
 </div>
 
 </section>
+
+<!-- MODAL / CAIXA DE EDIÇÃO DE OBSERVAÇÃO -->
+<div id="modalObs" class="modal-overlay hidden">
+  <div class="modal-box">
+    <h3 style="margin-top:0;">Observação do Pedido</h3>
+    
+    <label style="margin-bottom:12px;">
+      Texto da Observação
+      <input id="modalObsTexto" placeholder="Digite a observação...">
+    </label>
+
+    <label style="margin-bottom:16px;">
+      Cor do Destaque
+      <select id="modalObsCor">
+        <option value="#0f5e7a" style="color:#0f5e7a; font-weight:bold;">Azul</option>
+        <option value="#b3261e" style="color:#b3261e; font-weight:bold;">Vermelho</option>
+        <option value="#1b7a4b" style="color:#1b7a4b; font-weight:bold;">Verde</option>
+        <option value="#b26a00" style="color:#b26a00; font-weight:bold;">Laranja</option>
+        <option value="#6b21a8" style="color:#6b21a8; font-weight:bold;">Roxo</option>
+      </select>
+    </label>
+
+    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+      <button type="button" class="g" id="modalObsCancelar">Cancelar</button>
+      <button type="button" class="b" id="modalObsSalvar">Salvar</button>
+    </div>
+  </div>
+</div>
 
 </div>
 

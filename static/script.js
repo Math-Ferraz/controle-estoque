@@ -158,7 +158,6 @@ function renderCategorias(){
   const busca=nrm(($("eBusca")?.value)||"");
   const catFiltro=($("eCategoriaFiltro")?.value)||"";
 
-  // Por padrão, esconde a lista de categorias se não houver busca/filtro aplicado
   if(!busca && !catFiltro){
     tb.innerHTML=`
       <tr>
@@ -594,7 +593,6 @@ function fillSel(){
       )
     );
 
-  // Preenche as listas de autocompletar (datalist) das abas
   const preencherDatalist = (idDatalist, comOpcaoTodos = false) => {
     const el = $(idDatalist);
     if (!el) return;
@@ -607,9 +605,8 @@ function fillSel(){
   preencherDatalist("qEqList");       // Disponibilidade
   preencherDatalist("nEqList");       // Nova locação
   preencherDatalist("mEqList");       // Manutenção
-  preencherDatalist("hEqList", true); // Histórico (inclui opção "Todos")
+  preencherDatalist("hEqList", true); // Histórico
 
-  // Preenche apenas os selects tradicionais de edição pontual
   const o = eqOrdenados
     .map(e => `<option value="${e.id}">${esc(e.nome)}</option>`)
     .join("");
@@ -850,7 +847,7 @@ function notaVol(l){
 
 
 // ============================================================
-// MOVIMENTAÇÃO DO DIA
+// MOVIMENTAÇÃO DO DIA (AGRUPADA E COM CONTAGEM POR PEDIDOS)
 // ============================================================
 
 function renderDia(){
@@ -862,42 +859,83 @@ function renderDia(){
   const vol=S.loc.filter(l=>l.fim===d);
   const atr=d===h0?S.loc.filter(l=>!l.conf&&l.fim<h0):[];
 
-  const it=(l,x)=>
-    `<div class="it">
-      <b>${l.qtd}× ${esc(eqName(l.eq))}</b><br>
-      <small>
-        <b>${esc(l.cliente)}</b>${l.tel?" · "+esc(l.tel):""}
-        ${x&&x.per?" · até "+fmt(l.fim):""}
-        ${x&&x.atr?" · devolução prevista "+fmt(l.fim):""}
-      </small>
-      ${x&&x.b||""}
-    </div>`;
+  const agrupar = (lista) => {
+    const grupos = [];
+    lista.forEach(l => {
+      const chave = `${nrm(l.cliente)}|${nrm(l.tel||"")}|${l.ini}|${l.fim}`;
+      let g = grupos.find(x => x.chave === chave);
+      if (!g) {
+        g = { chave, cliente: l.cliente, tel: l.tel, ini: l.ini, fim: l.fim, obs: l.obs||"", obsCor: l.obsCor||"#0f5e7a", itens: [] };
+        grupos.push(g);
+      }
+      g.itens.push(l);
+    });
+    return grupos;
+  };
 
-  const btn=l=>
-    l.conf
-    ? `<div><span class="tag ok">✔ ${l.conf.tipo} confirmada</span></div>`
-    : `<div style="margin-top:4px">
-        <button class="g" data-vc="${l.id}|Devolução">Devolução confirmada</button>
-        <button class="g" data-vc="${l.id}|Retirada">Retirada confirmada</button>
-      </div>`;
+  const gruposSai = agrupar(sai);
+  const gruposVol = agrupar(vol);
+  const gruposAtr = agrupar(atr);
 
-  const col=(t,c,list,vazio)=>
-    `<div class="col">
-      <h3>${t} (${list.length})</h3>
-      ${c.length?c.join(""):`<small>${vazio}</small>`}
-    </div>`;
+  const itGroup = (g, x) => {
+    const todosConfirmados = g.itens.every(i => i.conf);
+    const primeiro = g.itens[0];
 
-  let h=col("Saem do estoque", sai.map(l=>it(l,{per:1,b:notaSai(l)})), sai, "Nenhuma saída neste dia.");
-  h+=col("Voltam ao estoque", vol.map(l=>it(l,{b:notaVol(l)+btn(l)})), vol, "Nenhuma devolução ou retirada neste dia.");
+    const listaEquipamentos = g.itens.map(l => 
+      `<b>${l.qtd}× ${esc(eqName(l.eq))}</b>`
+    ).join("<br>");
 
-  if(atr.length){
-    h+=`<div class="col bad">
-      <h3>Em atraso (${atr.length})</h3>
-      ${atr.map(l=>it(l,{atr:1,b:btn(l)})).join("")}
+    const btn = todosConfirmados
+      ? `<div><span class="tag ok">✔ ${primeiro.conf.tipo} confirmada</span></div>`
+      : `<div style="margin-top:6px">
+          <button class="g" data-vc-grupo="${g.chave}|Devolução">Devolução confirmada</button>
+          <button class="g" data-vc-grupo="${g.chave}|Retirada">Retirada confirmada</button>
+        </div>`;
+
+    const notas = g.itens.map(l => x && x.per ? notaSai(l) : x && x.vol ? notaVol(l) : "").filter(Boolean).join("");
+
+    const obsHTML = g.obs ? `<br><small style="color:${esc(g.obsCor||"#0f5e7a")}; font-weight:bold;">📝 ${esc(g.obs)}</small>` : "";
+
+    return `
+      <div class="it" style="margin-bottom:8px; padding-bottom:8px;">
+        ${listaEquipamentos}<br>
+        <small>
+          <b>${esc(g.cliente)}</b>${g.tel ? " · " + esc(g.tel) : ""}
+          ${x && x.per ? " · até " + fmt(g.fim) : ""}
+          ${x && x.atr ? " · devolução prevista " + fmt(g.fim) : ""}
+        </small>
+        ${obsHTML}
+        ${notas}
+        ${x && x.b ? btn : ""}
+      </div>
+    `;
+  };
+
+  const col = (t, c, list, vazio) => {
+    const totalItens = list.reduce((acc, g) => acc + g.itens.reduce((s, i) => s + i.qtd, 0), 0);
+    const txtContagem = list.length
+      ? `${list.length} pedido(s) · ${totalItens} item(ns)`
+      : `0`;
+
+    return `
+      <div class="col">
+        <h3>${t} (${txtContagem})</h3>
+        ${c.length ? c.join("") : `<small>${vazio}</small>`}
+      </div>
+    `;
+  };
+
+  let h = col("Saem do estoque", gruposSai.map(g => itGroup(g, { per: 1 })), gruposSai, "Nenhuma saída neste dia.");
+  h += col("Voltam ao estoque", gruposVol.map(g => itGroup(g, { vol: 1, b: 1 })), gruposVol, "Nenhuma devolução ou retirada neste dia.");
+
+  if (gruposAtr.length) {
+    h += `<div class="col bad">
+      <h3>Em atraso (${gruposAtr.length} pedido(s) · ${gruposAtr.reduce((acc, g) => acc + g.itens.reduce((s, i) => s + i.qtd, 0), 0)} item(ns))</h3>
+      ${gruposAtr.map(g => itGroup(g, { atr: 1, b: 1 })).join("")}
     </div>`;
   }
 
-  $("dOut").innerHTML=h;
+  $("dOut").innerHTML = h;
 }
 
 
@@ -969,6 +1007,7 @@ function abrirEd(id){
 
   edId=l.id;
   $("edEq").value=l.eq;
+  if ($("edEqInput")) $("edEqInput").value = eqName(l.eq);
   $("edCli").value=l.cliente;
   $("edTel").value=l.tel||"";
   $("edQtd").value=l.qtd;
@@ -1006,34 +1045,6 @@ function statusLocacao(l){
   return { texto:"Em andamento", classe:"ok" };
 }
 
-
-// ============================================================
-// PESQUISA DE CLIENTE NAS LOCAÇÕES
-// ============================================================
-
-function renderPesquisaCliente(){
-  const input=$("lBuscaCli");
-  const msg=$("lBuscaMsg");
-  if(!input)return;
-
-  const busca=nrm(input.value);
-  if(!busca){
-    if(msg)msg.textContent=`${S.loc.length} locação(ões) cadastrada(s).`;
-    return;
-  }
-
-  const qtd=S.loc.filter(l=>nrm(l.cliente+" "+(l.tel||"")).includes(busca)).length;
-  if(msg){
-    msg.textContent=`${qtd} locação(ões) encontradas para "${input.value.trim()}".`;
-  }
-}
-
-function limparPesquisaCliente(){
-  const input=$("lBuscaCli");
-  if(input)input.value="";
-  renderLoc();
-  if(input)input.focus();
-}
 
 
 // ============================================================
@@ -1097,101 +1108,322 @@ function renderMan(){
 
 
 // ============================================================
-// LOCAÇÕES
+// PREENCHIMENTO DO FILTRO DE MESES
+// ============================================================
+
+function preencherFiltroMeses() {
+  const select = $("lFiltroMes");
+  if (!select) return;
+
+  const valorAtual = select.value;
+  const mesesSet = new Set();
+
+  // Mês atual como padrão
+  const hoje = hojeLocal().slice(0, 7); // Ex: '2026-10'
+  mesesSet.add(hoje);
+
+  S.loc.forEach(l => {
+    if (l.ini && l.fim) {
+      let dAtual = new Date(l.ini + "T00:00:00Z");
+      const dFim = new Date(l.fim + "T00:00:00Z");
+
+      while (dAtual <= dFim) {
+        const ano = dAtual.getUTCFullYear();
+        const mes = String(dAtual.getUTCMonth() + 1).padStart(2, "0");
+        mesesSet.add(`${ano}-${mes}`);
+        
+        dAtual.setUTCMonth(dAtual.getUTCMonth() + 1);
+        dAtual.setUTCDate(1);
+      }
+    }
+  });
+
+  const mesesOrdenados = Array.from(mesesSet).sort().reverse();
+
+  let html = `<option value="">Todos os meses</option>`;
+  mesesOrdenados.forEach(m => {
+    const [ano, mes] = m.split("-");
+    const dataObj = new Date(ano, mes - 1, 1);
+    const nomeMes = dataObj.toLocaleString("pt-BR", { month: "long" });
+    const nomeFormatado = nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1) + " / " + ano;
+    html += `<option value="${m}">${nomeFormatado}</option>`;
+  });
+
+  select.innerHTML = html;
+
+  // Seleciona o mês salvo ou define o Mês Atual por padrão
+  if (valorAtual) {
+    select.value = valorAtual;
+  } else if (mesesSet.has(hoje)) {
+    select.value = hoje;
+  }
+}
+
+// ============================================================
+// LOCAÇÕES (ORDENADAS POR DATA DE INÍCIO COM DESTAQUE NO PERÍODO)
 // ============================================================
 
 function renderLoc(){
   renderDia();
   renderHist();
+  preencherFiltroMeses();
 
-  const busca=nrm(($("lBuscaCli")?.value)||"");
-  let rows=[...S.loc];
+  const busca = nrm(($("lBuscaCli")?.value)||"");
+  const mesFiltro = ($("lFiltroMes")?.value)||"";
 
-  if(busca){
-    rows=rows.filter(l=>nrm(l.cliente+" "+(l.tel||"")).includes(busca));
+  let rows = [...S.loc];
+
+  // Exibe APENAS as locações ativas dentro do mês selecionado
+  if (mesFiltro) {
+    const [anoF, mesF] = mesFiltro.split("-").map(Number);
+    const inicioMes = `${mesFiltro}-01`;
+    const ultimoDia = new Date(anoF, mesF, 0).getDate();
+    const fimMes = `${mesFiltro}-${String(ultimoDia).padStart(2, "0")}`;
+
+    rows = rows.filter(l => (l.iniOrig || l.ini) <= fimMes && l.fim >= inicioMes);
   }
 
-  rows.sort((a,b)=>{
-    const ca=nrm(a.cliente);
-    const cb=nrm(b.cliente);
-    const cmpCliente=ca.localeCompare(cb,"pt-BR",{sensitivity:"base"});
-    if(cmpCliente!==0)return cmpCliente;
-    return a.ini.localeCompare(b.ini);
+  // Filtra por nome do cliente, telefone ou observação
+  if (busca) {
+    rows = rows.filter(l => nrm(l.cliente + " " + (l.tel||"") + " " + (l.obs||"")).includes(busca));
+  }
+
+  // Agrupa locações pelo mesmo Cliente + Telefone + Início + Fim
+  const grupos = [];
+  rows.forEach(l => {
+    const chave = `${nrm(l.cliente)}|${nrm(l.tel||"")}|${l.ini}|${l.fim}`;
+    let g = grupos.find(x => x.chave === chave);
+    if (!g) {
+      g = {
+        chave,
+        cliente: l.cliente,
+        tel: l.tel,
+        ini: l.ini,
+        fim: l.fim,
+        iniOrig: l.iniOrig || l.ini,
+        obs: l.obs || "",
+        obsCor: l.obsCor || "#0f5e7a",
+        itens: []
+      };
+      grupos.push(g);
+    }
+    g.itens.push(l);
   });
 
-  $("lTb").innerHTML=rows.length
-    ? rows.map(l=>{
-        const st=statusLocacao(l);
+  // ORDENAÇÃO POR DATA DE INÍCIO (crescente). Em empate de datas, ordena pelo nome do cliente.
+  grupos.sort((a,b) => {
+    const diffData = a.ini.localeCompare(b.ini);
+    if (diffData !== 0) return diffData;
+    return a.cliente.localeCompare(b.cliente, "pt-BR", { sensitivity: "base" });
+  });
+
+  $("lTb").innerHTML = grupos.length
+    ? grupos.map((g, gIdx) => {
+        const primeiro = g.itens[0];
+        const st = statusLocacao(primeiro);
+        const grupoId = `g_${gIdx}`;
+
+        const listaEquipamentosHTML = g.itens.map(l => `
+          <div style="margin-bottom: 4px;">
+            <b>${l.qtd}×</b> ${esc(eqName(l.eq))}
+            ${deps(l).length ? `<br><span class="warn" style="padding:2px 6px;border-radius:4px;font-size:11px">depende da devolução de ${nomes(deps(l),l)}</span>` : ""}
+          </div>
+        `).join("");
+
+        const totalQtd = g.itens.reduce((sum, item) => sum + item.qtd, 0);
+
+        // Lembrete visual se a locação foi renovada
+        const renovadoHTML = (g.iniOrig && g.iniOrig !== g.ini) ? `
+          <div style="margin-top:4px;">
+            <span class="tag warn" style="font-size:11px; padding:2px 6px;">🔄 Renovado (Início original: ${fmt(g.iniOrig)})</span>
+          </div>
+        ` : "";
+
+        const obsHTML = g.obs ? `
+          <div style="margin-top:6px; padding:4px 8px; border-left:3px solid ${esc(g.obsCor)}; background:var(--bg); border-radius:3px;">
+            <small style="color:${esc(g.obsCor)}; font-weight:bold; font-size:12px;">📝 Obs: ${esc(g.obs)}</small>
+          </div>
+        ` : "";
+
         return `
           <tr>
-            <td>${esc(eqName(l.eq))}</td>
+            <td>${listaEquipamentosHTML}</td>
             <td>
-              <b>${esc(l.cliente)}</b>${l.tel?`<br><small>${esc(l.tel)}</small>`:""}
-              ${deps(l).length?`<br><span class="warn" style="padding:2px 6px;border-radius:4px;font-size:12px">depende da devolução de ${nomes(deps(l),l)}</span>`:""}
+              <b>${esc(g.cliente)}</b>${g.tel ? `<br><small>${esc(g.tel)}</small>` : ""}
+              ${obsHTML}
             </td>
-            <td>${l.qtd}</td>
-            <td>${fmt(l.ini)} a ${fmt(l.fim)}</td>
+            <td><b>${totalQtd}</b></td>
             <td>
-              ${l.conf
+              <div style="font-weight:700; color:var(--ink); background:rgba(0,0,0,0.04); padding:4px 8px; border-radius:6px; display:inline-block; border:1px solid var(--line);">
+                📅 ${fmt(g.ini)} a ${fmt(g.fim)}
+              </div>
+              ${renovadoHTML}
+            </td>
+            <td>
+              ${primeiro.conf
                 ? `<span class="${st.classe}" style="padding:3px 8px;border-radius:4px">✔ ${esc(st.texto)}</span>`
-                : `<span class="tag ${st.classe}">${st.texto}</span><br><input type="date" id="rn${l.id}" min="${add(l.fim,1)}" style="width:150px"><button class="g" data-r="${l.id}">Renovar</button>`
+                : `<span class="tag ${st.classe}">${st.texto}</span><br><input type="date" id="rn_${grupoId}" min="${add(g.fim,1)}" style="width:150px"><button class="g" data-r-grupo="${grupoId}">Renovar pedido</button>`
               }
             </td>
             <td>
-              ${l.conf?"":`<input type="date" id="cf${l.id}" value="${l.fim}" style="width:150px"><button class="g" data-c="${l.id}|Devolução">Devolução confirmada</button><button class="g" data-c="${l.id}|Retirada">Retirada confirmada</button>`}
-              <button class="g" data-e="${l.id}">Editar</button>
-              <button class="g d" data-x="${l.id}">Excluir</button>
+              ${primeiro.conf ? "" : `<input type="date" id="cf_${grupoId}" value="${g.fim}" style="width:150px"><button class="g" data-c-grupo="${grupoId}|Devolução">Devolução confirmada</button><button class="g" data-c-grupo="${grupoId}|Retirada">Retirada confirmada</button>`}
+              <button class="g" data-obs-grupo="${grupoId}">${g.obs ? "Editar obs." : "+ Obs."}</button>
+              <button class="g d" data-x-grupo="${grupoId}">Excluir pedido</button>
             </td>
           </tr>
         `;
       }).join("")
-    : `<tr><td colspan="6">${busca?"Nenhuma locação encontrada para este cliente.":"Nenhuma locação. Registre a primeira na aba Nova locação."}</td></tr>`;
+    : `<tr><td colspan="6">${busca || mesFiltro ? "Nenhuma locação encontrada para este mês/filtro." : "Nenhuma locação encontrada."}</td></tr>`;
 
-  renderPesquisaCliente();
+  renderPesquisaCliente(grupos.length, rows.reduce((s, i) => s + i.qtd, 0));
 
-  $("lTb").querySelectorAll("[data-r]").forEach(b=>{
-    b.onclick=()=>{
-      const l=S.loc.find(x=>x.id==b.dataset.r);
-      const n=$("rn"+l.id).value;
-      if(!n||n<=l.fim){
-        $("lMsg").textContent="Escolha uma data posterior ao fim atual.";
-        return;
-      }
-      const falta=avail(l.eq,l.fim,n,l.id).filter(x=>x.v<l.qtd);
-      l.fim=n;
-      save();
-      renderLoc();
-      $("lMsg").textContent=falta.length?`Renovado até ${fmt(n)}, mas faltam unidades a partir de ${fmt(falta[0].d)}. Revise as reservas.`:`Renovado até ${fmt(n)}. O estoque futuro foi atualizado.`;
-    };
+  // Ações por grupo (Obs, Renovar, Devolução, Excluir)
+  grupos.forEach((g, gIdx) => {
+    const grupoId = `g_${gIdx}`;
+
+    const btnObs = $("lTb").querySelector(`[data-obs-grupo="${grupoId}"]`);
+    if (btnObs) {
+      btnObs.onclick = () => {
+        const modal = $("modalObs");
+        const txtInput = $("modalObsTexto");
+        const corSelect = $("modalObsCor");
+        const btnSalvar = $("modalObsSalvar");
+        const btnCancelar = $("modalObsCancelar");
+
+        if (!modal || !txtInput || !corSelect) return;
+
+        txtInput.value = g.obs || "";
+        corSelect.value = g.obsCor || "#0f5e7a";
+
+        modal.classList.remove("hidden");
+        modal.style.display = "flex";
+        txtInput.focus();
+
+        const fecharModal = () => {
+          modal.classList.add("hidden");
+          modal.style.display = "none";
+          btnSalvar.onclick = null;
+          btnCancelar.onclick = null;
+        };
+
+        btnCancelar.onclick = fecharModal;
+        modal.onclick = (e) => { if (e.target === modal) fecharModal(); };
+
+        btnSalvar.onclick = () => {
+          const novaObs = txtInput.value.trim();
+          const novaCor = corSelect.value;
+
+          g.itens.forEach(l => {
+            l.obs = novaObs;
+            l.obsCor = novaCor;
+          });
+
+          save();
+          renderLoc();
+          fecharModal();
+          $("lMsg").textContent = "Observação atualizada com sucesso.";
+        };
+      };
+    }
+
+    const btnR = $("lTb").querySelector(`[data-r-grupo="${grupoId}"]`);
+    if (btnR) {
+      btnR.onclick = () => {
+        const n = $(`rn_${grupoId}`).value;
+        if (!n || n <= g.fim) {
+          $("lMsg").textContent = "Escolha uma data posterior ao fim atual.";
+          return;
+        }
+
+        let avisoFalta = false;
+        g.itens.forEach(l => {
+          const falta = avail(l.eq, l.fim, n, l.id).filter(x => x.v < l.qtd);
+          if (falta.length) avisoFalta = true;
+          if (!l.iniOrig) l.iniOrig = l.ini;
+          l.fim = n;
+        });
+
+        save();
+        renderLoc();
+        $("lMsg").textContent = avisoFalta 
+          ? `Pedido renovado até ${fmt(n)}, mas faltam unidades para alguns equipamentos.` 
+          : `Pedido de ${esc(g.cliente)} renovado até ${fmt(n)}.`;
+      };
+    }
+
+    const btnsC = $("lTb").querySelectorAll(`[data-c-grupo^="${grupoId}|"]`);
+    btnsC.forEach(btn => {
+      btn.onclick = () => {
+        const [, tipo] = btn.dataset.cGrupo.split("|");
+        const d = $(`cf_${grupoId}`).value;
+        if (!d || d < g.ini) {
+          $("lMsg").textContent = "Informe a data real, a partir do início da locação.";
+          return;
+        }
+
+        g.itens.forEach(l => {
+          l.fim = d;
+          l.conf = { tipo, data: d };
+        });
+
+        save();
+        renderLoc();
+        $("lMsg").textContent = `${tipo} confirmada para todos os itens do pedido de ${esc(g.cliente)}.`;
+      };
+    });
+
+    const btnX = $("lTb").querySelector(`[data-x-grupo="${grupoId}"]`);
+    if (btnX) {
+      btnX.onclick = () => {
+        if (!confirm(`Excluir todo o pedido de ${g.cliente}?`)) return;
+
+        const idsParaRemover = g.itens.map(i => i.id);
+        S.loc = S.loc.filter(x => !idsParaRemover.includes(x.id));
+
+        save();
+        renderLoc();
+        $("lMsg").textContent = `Pedido de ${esc(g.cliente)} excluído.`;
+      };
+    }
   });
+}
 
-  $("lTb").querySelectorAll("[data-c]").forEach(b=>{
-    b.onclick=()=>{
-      const [id,tipo]=b.dataset.c.split("|");
-      const l=S.loc.find(x=>x.id==id);
-      const d=$("cf"+id).value;
-      if(!d||d<l.ini){
-        $("lMsg").textContent="Informe a data real, a partir do início da locação.";
-        return;
-      }
-      l.fim=d;
-      l.conf={ tipo, data:d };
-      save();
-      renderLoc();
-      $("lMsg").textContent=`${tipo} confirmada. ${l.qtd} un. de ${eqName(l.eq)} livres a partir de ${fmt(add(d,1))}.`;
-    };
-  });
+// ============================================================
+// CONTAGEM DA PESQUISA / CABEÇALHO E OUVINTES DE EVENTO
+// ============================================================
 
-  $("lTb").querySelectorAll("[data-e]").forEach(b=>b.onclick=()=>abrirEd(b.dataset.e));
+function renderPesquisaCliente(qtdGrupos, totalItens){
+  const msg = $("lBuscaMsg");
+  if (!msg) return;
 
-  $("lTb").querySelectorAll("[data-x]").forEach(b=>{
-    b.onclick=()=>{
-      S.loc=S.loc.filter(x=>x.id!=b.dataset.x);
-      save();
-      renderLoc();
-      $("lMsg").textContent="Locação excluída.";
-    };
-  });
+  const numGrupos = qtdGrupos !== undefined ? qtdGrupos : 0;
+  const numItens = totalItens !== undefined ? totalItens : 0;
+
+  msg.textContent = `${numGrupos} pedido(s) cadastrado(s) (${numItens} item(ns) no total).`;
+}
+
+function limparPesquisaCliente(){
+  if ($("lBuscaCli")) $("lBuscaCli").value = "";
+  if ($("lFiltroMes")) $("lFiltroMes").value = "";
+  renderLoc();
+  if ($("lBuscaCli")) $("lBuscaCli").focus();
+}
+
+// Vinculação de eventos para busca e filtro por mês
+const elBuscaCli = $("lBuscaCli");
+if (elBuscaCli) {
+  elBuscaCli.addEventListener("input", () => { renderLoc(); });
+  elBuscaCli.addEventListener("keydown", e => { if (e.key === "Enter") { renderLoc(); } });
+}
+
+const elFiltroMes = $("lFiltroMes");
+if (elFiltroMes) {
+  elFiltroMes.addEventListener("change", () => { renderLoc(); });
+}
+
+const elBuscaLimpar = $("lBuscaLimpar");
+if (elBuscaLimpar) { 
+  elBuscaLimpar.onclick = limparPesquisaCliente; 
 }
 
 
@@ -1240,7 +1472,6 @@ function renderEq(){
 
   const resumo=$("eResumo");
 
-  // Por padrão, se a busca e o filtro estiverem vazios, NÃO mostra os equipamentos
   if(!busca && !catFiltro){
     tb.innerHTML=`
       <tr>
@@ -1484,56 +1715,140 @@ function renderEq(){
 
 
 // ============================================================
-// NOVA LOCAÇÃO
+// NOVA LOCAÇÃO (COM CARRINHO DE MÚLTIPLOS ITENS E OBSERVAÇÃO)
 // ============================================================
 
-const nAdd=$("nAdd");
-if(nAdd){
-  nAdd.onclick=()=>{
-    const id=+$("nEq").value;
-    const c=$("nCli").value.trim();
-    const q=+$("nQtd").value;
-    const a=$("nIni").value;
-    const b=$("nFim").value;
-    const m=$("nMsg");
+let nItensCarrinho = [];
 
-    if(!id){
-      m.textContent="Selecione um equipamento válido da lista.";
+function renderCarrinhoLocacao() {
+  const box = $("nItensBox");
+  const tb = $("nItensTb");
+  if (!box || !tb) return;
+
+  if (nItensCarrinho.length === 0) {
+    box.classList.add("hidden");
+    tb.innerHTML = "";
+    return;
+  }
+
+  box.classList.remove("hidden");
+  tb.innerHTML = nItensCarrinho.map((item, idx) => `
+    <tr>
+      <td><b>${esc(eqName(item.eqId))}</b></td>
+      <td>${item.qtd}</td>
+      <td>
+        <button class="g d" type="button" data-del-carrinho="${idx}">Remover</button>
+      </td>
+    </tr>
+  `).join("");
+
+  tb.querySelectorAll("[data-del-carrinho]").forEach(btn => {
+    btn.onclick = () => {
+      const idx = Number(btn.dataset.delCarrinho);
+      nItensCarrinho.splice(idx, 1);
+      renderCarrinhoLocacao();
+    };
+  });
+}
+
+const nAddItem = $("nAddItem");
+if (nAddItem) {
+  nAddItem.onclick = () => {
+    const eqId = +$("nEq").value;
+    const qtd = +$("nQtd").value;
+    const m = $("nMsg");
+
+    if (!eqId) {
+      if (m) m.textContent = "Selecione um equipamento válido da lista.";
       return;
     }
 
-    if(!c||!a||!b||b<a||q<1){
-      m.textContent="Preencha cliente, quantidade e um período válido.";
+    if (qtd < 1) {
+      if (m) m.textContent = "Informe uma quantidade válida.";
       return;
     }
 
-    const min=Math.min(...avail(id,a,b).map(x=>x.v));
-    if(min<q){
-      m.textContent=`Sem estoque: só ${Math.max(min,0)} unidade(s) livres em todo o período.`;
+    const existente = nItensCarrinho.find(i => i.eqId === eqId);
+    if (existente) {
+      existente.qtd += qtd;
+    } else {
+      nItensCarrinho.push({ eqId, qtd });
+    }
+
+    if ($("nEqInput")) $("nEqInput").value = "";
+    $("nEq").value = "";
+    $("nQtd").value = 1;
+    if (m) m.textContent = "";
+
+    renderCarrinhoLocacao();
+    if ($("nEqInput")) $("nEqInput").focus();
+  };
+}
+
+const nAdd = $("nAdd");
+if (nAdd) {
+  nAdd.onclick = () => {
+    const c = $("nCli").value.trim();
+    const tel = $("nTel").value.trim();
+    const a = $("nIni").value;
+    const b = $("nFim").value;
+    const obs = $("nObs") ? $("nObs").value.trim() : "";
+    const obsCor = $("nObsCor") ? $("nObsCor").value : "#0f5e7a";
+    const m = $("nMsg");
+
+    if (!c || !a || !b || b < a) {
+      if (m) m.textContent = "Preencha o cliente e um período válido de datas.";
       return;
     }
 
-    S.loc.push({
-      id:Date.now(),
-      eq:id,
-      cliente:c,
-      tel:$("nTel").value.trim(),
-      qtd:q,
-      ini:a,
-      fim:b
+    if (nItensCarrinho.length === 0) {
+      const eqIdPendente = +$("nEq").value;
+      const qtdPendente = +$("nQtd").value;
+
+      if (eqIdPendente && qtdPendente >= 1) {
+        nItensCarrinho.push({ eqId: eqIdPendente, qtd: qtdPendente });
+      } else {
+        if (m) m.textContent = "Adicione ao menos um equipamento para registrar a locação.";
+        return;
+      }
+    }
+
+    for (const item of nItensCarrinho) {
+      const min = Math.min(...avail(item.eqId, a, b).map(x => x.v));
+      if (min < item.qtd) {
+        if (m) m.textContent = `Sem estoque para ${eqName(item.eqId)}: só há ${Math.max(min, 0)} unidade(s) livre(s) no período.`;
+        return;
+      }
+    }
+
+    const agora = Date.now();
+    nItensCarrinho.forEach((item, index) => {
+      S.loc.push({
+        id: agora + index,
+        eq: item.eqId,
+        cliente: c,
+        tel: tel,
+        qtd: item.qtd,
+        ini: a,
+        fim: b,
+        obs: obs,
+        obsCor: obsCor
+      });
     });
 
     save();
     renderLoc();
 
-    // Limpa os campos do formulário após salvar com sucesso
-    if($("nEqInput")) $("nEqInput").value = "";
-    $("nEq").value = "";
+    nItensCarrinho = [];
+    renderCarrinhoLocacao();
     $("nCli").value = "";
     $("nTel").value = "";
+    if ($("nObs")) $("nObs").value = "";
+    if ($("nEqInput")) $("nEqInput").value = "";
+    $("nEq").value = "";
     $("nQtd").value = 1;
 
-    m.textContent="Locação registrada.";
+    if (m) m.textContent = "Todas as locações foram registradas com sucesso!";
   };
 }
 
@@ -1576,7 +1891,6 @@ if(eAdd){
     $("eTot").value=1;
     save();
 
-    // Quando insere um novo equipamento, já aplica a busca por ele para ser exibido imediatamente
     if($("eBusca")) $("eBusca").value = n;
 
     renderEq();
@@ -1721,7 +2035,7 @@ function pd(v){
 }
 
 function renderBk(){
-  if(!eAdmin) return; // Bloqueia renderização de backup se não for admin
+  if(!eAdmin) return;
 
   const b=S.cfg.bk;
   const d=b?Math.floor((Date.now()-new Date(b))/864e5):null;
@@ -2056,7 +2370,6 @@ if(mAdd){
     renderMan();
     renderLoc();
 
-    // Limpeza dos campos de manutenção
     if($("mEqInput")) $("mEqInput").value = "";
     $("mEq").value = "";
     $("mQtd").value = 1;
@@ -2068,7 +2381,7 @@ if(mAdd){
 
 
 // ============================================================
-// EDIÇÃO DE LOCAÇÃO
+// EDIÇÃO DE LOCAÇÃO INDIVIDUAL
 // ============================================================
 
 const edCancel=$("edCancel");
@@ -2196,7 +2509,6 @@ if(hClr){
 // AUTOCOMPLETAR E LIMPEZA DE CONSULTA
 // ============================================================
 
-// Vincular autocompletar ao ID invisível para todas as abas
 const vincularAutocompletar = (idInput, idHidden, permiteTodos = false) => {
   const elInput = $(idInput);
   if (!elInput) return;
@@ -2205,7 +2517,7 @@ const vincularAutocompletar = (idInput, idHidden, permiteTodos = false) => {
     const val = elInput.value.trim();
 
     if (permiteTodos && (!val || nrm(val) === "todos")) {
-      $(idHidden).value = ""; // Sem filtro
+      $(idHidden).value = "";
       return;
     }
 
@@ -2216,10 +2528,10 @@ const vincularAutocompletar = (idInput, idHidden, permiteTodos = false) => {
 
 vincularAutocompletar("qEqInput", "qEq");
 vincularAutocompletar("nEqInput", "nEq");
+vincularAutocompletar("edEqInput", "edEq");
 vincularAutocompletar("mEqInput", "mEq");
-vincularAutocompletar("hEqInput", "hEq", true); // Histórico aceita valor "Todos"
+vincularAutocompletar("hEqInput", "hEq", true);
 
-// Limpar consulta na aba Disponibilidade
 const qClr = $("qClr");
 if(qClr){
   qClr.onclick = () => {
@@ -2286,18 +2598,28 @@ if(dHoje){
 const dOut=$("dOut");
 if(dOut){
   dOut.onclick=e=>{
-    const b=e.target.closest("[data-vc]");
+    const b=e.target.closest("[data-vc-grupo]");
     if(!b)return;
-    const [id,tipo]=b.dataset.vc.split("|");
-    const l=S.loc.find(x=>x.id==id);
-    if(!l)return;
+    const [chave, tipo] = b.dataset.vcGrupo.split("|");
+
+    const itensDoGrupo = S.loc.filter(l => {
+      const c = `${nrm(l.cliente)}|${nrm(l.tel||"")}|${l.ini}|${l.fim}`;
+      return c === chave;
+    });
+
+    if(!itensDoGrupo.length) return;
 
     const h0=hojeLocal();
-    l.fim=l.fim<h0?h0:l.fim;
-    l.conf={ tipo, data:l.fim };
+    const clienteNome = itensDoGrupo[0].cliente;
+
+    itensDoGrupo.forEach(l => {
+      l.fim = l.fim < h0 ? h0 : l.fim;
+      l.conf = { tipo, data: l.fim };
+    });
+
     save();
     renderLoc();
-    $("lMsg").textContent=`${tipo} confirmada. ${l.qtd} un. de ${eqName(l.eq)} livres a partir de ${fmt(add(l.fim,1))}.`;
+    $("lMsg").textContent = `${tipo} confirmada para todos os itens do pedido de ${esc(clienteNome)}.`;
   };
 }
 
@@ -2401,8 +2723,6 @@ async function checarUsuario(){
       mostrar("bkDbBox", eAdmin);
       mostrar("avisoTeste", !!d.teste_temporario);
 
-      // RESTRIÇÃO DE MÓDULO DE DADOS/BACKUP:
-      // Oculta a aba Dados se não for Administrador
       const navDados = document.querySelector('nav button[data-t="dados"]');
       if(navDados){
         navDados.style.display = eAdmin ? "" : "none";

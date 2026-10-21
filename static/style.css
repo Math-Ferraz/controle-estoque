@@ -103,7 +103,7 @@ small {
 }
 
 .hidden {
-  display: none;
+  display: none !important;
 }
 
 .tag, button {
@@ -158,10 +158,10 @@ section {
    4. FORMULÁRIOS, LABELS E INPUTS
    ========================================================================== */
 .row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 10px;
-  align-items: end;
+  align-items: flex-end;
 }
 
 label {
@@ -170,6 +170,7 @@ label {
   font-size: 14px;
   color: var(--mut);
   gap: 3px;
+  flex: 1 1 140px;
 }
 
 input, select {
@@ -344,7 +345,33 @@ th {
 }
 
 /* ==========================================================================
-   9. MEDIA QUERIES (DESKTOP)
+   9. MODAL DE OBSERVAÇÃO
+   ========================================================================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modal-box {
+  background: var(--card);
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 450px;
+  width: 90%;
+  border: 1px solid var(--line);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* ==========================================================================
+   10. MEDIA QUERIES E AJUSTES RESPONSIVOS (DESKTOP)
    ========================================================================== */
 @media (min-width: 1280px) {
   #man:not(.hidden) {
@@ -367,35 +394,14 @@ th {
   }
 }
 
-/* ==========================================================================
-   10. CORREÇÃO DE LARGURAS DE COLUNAS (GRID)
-   ========================================================================== */
-
-/* Padronização dos containers .row em formulários */
-.row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: flex-end;
-}
-
-.row label {
-  flex: 1 1 140px;
-}
-
-/* Ajustes específicos de proporção por aba */
-
-/* Aba Disponibilidade */
+/* Ajustes específicos por aba */
 #disp .row label:first-child { flex: 2 1 240px; }
 #disp .row label:nth-child(2) { flex: 0.5 1 80px; }
 
-/* Aba Nova Locação */
 #nova .row label:first-child { flex: 2 1 240px; }
 #nova .row label:nth-child(2) { flex: 1.8 1 180px; }
 #nova .row label:nth-child(3) { flex: 1.2 1 140px; }
-#nova .row label:nth-child(4) { flex: 0.5 1 80px; }
 
-/* Aba Manutenção (formulário verticalizado em coluna única na esquerda) */
 #man .row {
   display: flex;
   flex-direction: column;
@@ -412,11 +418,9 @@ th {
   width: 100%;
 }
 
-/* Aba Histórico */
 #hist .row label:first-child { flex: 1 1 120px; }
 #hist .row label:nth-child(2) { flex: 2 1 220px; }
 
-/* Reseta min-width para evitar estouro de containers */
 #disp .row input,
 #nova .row input,
 #man .row input,
