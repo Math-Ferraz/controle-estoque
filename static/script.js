@@ -800,7 +800,7 @@ function consultar(){
         return;
       }
       const rq=Math.max(1,Math.min(parseInt($("rQtd").value,10)||1,min));
-      S.loc.push({ id:Date.now(), eq:id, cliente:c, tel:$("rTel").value.trim(), qtd:rq, ini:a, fim:b });
+      S.loc.push({ id:Date.now(), eq:id, cliente:c, tel:$("rTel").value.trim(), qtd:rq, ini:a, fim:b, entregue:0 });
       save();
       renderLoc();
       consultar();
@@ -847,7 +847,7 @@ function notaVol(l){
 
 
 // ============================================================
-// MOVIMENTAÇÃO DO DIA (AGRUPADA E COM CONFIRMAÇÃO DE ATRASOS)
+// MOVIMENTAÇÃO DO DIA (AGRUPADA E COM CONFIRMAÇÃO DE SAÍDAS E ATRASOS)
 // ============================================================
 
 function renderDia(){
@@ -879,6 +879,7 @@ function renderDia(){
 
   const itGroup = (g, x) => {
     const todosConfirmados = g.itens.every(i => i.conf);
+    const todosEntregues = g.itens.every(i => i.entregue == 1 || i.entregue == true);
     const primeiro = g.itens[0];
     const idsGrupo = g.itens.map(i => i.id).join(",");
 
@@ -886,12 +887,26 @@ function renderDia(){
       `<b>${l.qtd}× ${esc(eqName(l.eq))}</b>`
     ).join("<br>");
 
-    const btn = todosConfirmados
-      ? `<div><span class="tag ok">✔ ${primeiro.conf.tipo} confirmada</span></div>`
-      : `<div style="margin-top:6px">
+    let btn = '';
+
+    if (todosConfirmados) {
+      btn = `<div><span class="tag ok">✔ ${primeiro.conf.tipo} confirmada</span></div>`;
+    } else if (x && x.sai) {
+      // Painel "Saem do estoque": permite confirmar entrega
+      if (todosEntregues) {
+        btn = `<div><span class="tag ok">✔ Entrega confirmada</span></div>`;
+      } else {
+        btn = `<div style="margin-top:6px">
+            <button class="g" data-ent-ids="${idsGrupo}">Entrega confirmada</button>
+          </div>`;
+      }
+    } else if (x && x.b) {
+      // Painel "Voltam ao estoque" e "Em atraso"
+      btn = `<div style="margin-top:6px">
           <button class="g" data-vc-ids="${idsGrupo}|Devolução">Devolução confirmada</button>
           <button class="g" data-vc-ids="${idsGrupo}|Retirada">Retirada confirmada</button>
         </div>`;
+    }
 
     const notas = g.itens.map(l => x && x.per ? notaSai(l) : x && x.vol ? notaVol(l) : "").filter(Boolean).join("");
 
@@ -907,7 +922,7 @@ function renderDia(){
         </small>
         ${obsHTML}
         ${notas}
-        ${x && x.b ? btn : ""}
+        ${btn}
       </div>
     `;
   };
@@ -926,7 +941,7 @@ function renderDia(){
     `;
   };
 
-  let h = col("Saem do estoque", gruposSai.map(g => itGroup(g, { per: 1 })), gruposSai, "Nenhuma saída neste dia.");
+  let h = col("Saem do estoque", gruposSai.map(g => itGroup(g, { per: 1, sai: 1 })), gruposSai, "Nenhuma saída neste dia.");
   h += col("Voltam ao estoque", gruposVol.map(g => itGroup(g, { vol: 1, b: 1 })), gruposVol, "Nenhuma devolução ou retirada neste dia.");
 
   if (gruposAtr.length) {
@@ -1115,12 +1130,11 @@ function preencherFiltroMeses() {
   const select = $("lFiltroMes");
   if (!select) return;
 
-  // Se o select já tem opções e o usuário selecionou algo (inclusive "Todos os meses"), preserva
   const jaPreenchido = select.options.length > 1;
   const valorAtual = select.value;
 
   const mesesSet = new Set();
-  const hoje = hojeLocal().slice(0, 7); // Ex: '2026-10'
+  const hoje = hojeLocal().slice(0, 7);
   mesesSet.add(hoje);
 
   S.loc.forEach(l => {
@@ -1152,7 +1166,6 @@ function preencherFiltroMeses() {
 
   select.innerHTML = html;
 
-  // Mantém a seleção do usuário. Se for o primeiro carregamento, marca o mês atual.
   if (jaPreenchido) {
     select.value = valorAtual;
   } else if (mesesSet.has(hoje)) {
@@ -1174,7 +1187,6 @@ function renderLoc(){
 
   let rows = [...S.loc];
 
-  // Exibe as locações do mês selecionado OU locações não confirmadas que estejam em atraso
   if (mesFiltro) {
     const [anoF, mesF] = mesFiltro.split("-").map(Number);
     const inicioMes = `${mesFiltro}-01`;
@@ -1188,12 +1200,10 @@ function renderLoc(){
     });
   }
 
-  // Filtra por nome do cliente, telefone ou observação
   if (busca) {
     rows = rows.filter(l => nrm(l.cliente + " " + (l.tel||"") + " " + (l.obs||"")).includes(busca));
   }
 
-  // Agrupa locações pelo mesmo Cliente + Telefone + Início + Fim
   const grupos = [];
   rows.forEach(l => {
     const chave = `${nrm(l.cliente)}|${nrm(l.tel||"")}|${l.ini}|${l.fim}`;
@@ -1215,11 +1225,11 @@ function renderLoc(){
     g.itens.push(l);
   });
 
-  // Ordenação por data de início (crescente)
-  grupos.sort((a,b) => {
-    const diffData = a.ini.localeCompare(b.ini);
-    if (diffData !== 0) return diffData;
-    return a.cliente.localeCompare(b.cliente, "pt-BR", { sensitivity: "base" });
+  // Ordenação por data de término/retirada (crescente)
+  grupos.sort((a, b) => {
+      const diffData = a.fim.localeCompare(b.fim);
+      if (diffData !== 0) return diffData;
+      return a.cliente.localeCompare(b.cliente, "pt-BR", { sensitivity: "base" });
   });
 
   $("lTb").innerHTML = grupos.length
@@ -1227,6 +1237,23 @@ function renderLoc(){
         const primeiro = g.itens[0];
         const st = statusLocacao(primeiro);
         const grupoId = `g_${gIdx}`;
+
+        // Verifica se todos os itens deste grupo foram marcados como entregues
+        const estaEntregue = g.itens.every(i => i.entregue == 1 || i.entregue == true);
+
+        let statusBadge = '';
+        let btnEntrega = '';
+
+        if (!primeiro.conf) {
+            if (estaEntregue) {
+                statusBadge = `<span class="tag ok">Em andamento</span>`;
+            } else {
+                statusBadge = `<span class="tag warn">Falta entregar</span>`;
+                btnEntrega = `<br><button class="g" data-ent-grupo="${grupoId}" style="margin-top:4px;">Confirmar entrega</button>`;
+            }
+        } else {
+            statusBadge = `<span class="${st.classe}" style="padding:3px 8px;border-radius:4px">✔ ${esc(st.texto)}</span>`;
+        }
 
         const listaEquipamentosHTML = g.itens.map(l => `
           <div style="margin-bottom: 4px;">
@@ -1264,10 +1291,8 @@ function renderLoc(){
               ${renovadoHTML}
             </td>
             <td>
-              ${primeiro.conf
-                ? `<span class="${st.classe}" style="padding:3px 8px;border-radius:4px">✔ ${esc(st.texto)}</span>`
-                : `<span class="tag ${st.classe}">${st.texto}</span><br><input type="date" id="rn_${grupoId}" min="${add(g.fim,1)}" style="width:150px"><button class="g" data-r-grupo="${grupoId}">Renovar pedido</button>`
-              }
+              ${statusBadge}
+              ${primeiro.conf ? "" : `${btnEntrega}<br><input type="date" id="rn_${grupoId}" min="${add(g.fim,1)}" style="width:150px"><button class="g" data-r-grupo="${grupoId}">Renovar pedido</button>`}
             </td>
             <td>
               ${primeiro.conf ? "" : `<input type="date" id="cf_${grupoId}" value="${g.fim}" style="width:150px"><button class="g" data-c-grupo="${grupoId}|Devolução">Devolução confirmada</button><button class="g" data-c-grupo="${grupoId}|Retirada">Retirada confirmada</button>`}
@@ -1282,9 +1307,24 @@ function renderLoc(){
 
   renderPesquisaCliente(grupos.length, rows.reduce((s, i) => s + i.qtd, 0));
 
-  // Ações por grupo
   grupos.forEach((g, gIdx) => {
     const grupoId = `g_${gIdx}`;
+
+    // Confirmar Entrega do Pedido
+    const btnEnt = $("lTb").querySelector(`[data-ent-grupo="${grupoId}"]`);
+    if (btnEnt) {
+      btnEnt.onclick = () => {
+        if (!confirm(`Confirmar que o equipamento de ${g.cliente} foi entregue ao cliente?`)) return;
+
+        g.itens.forEach(l => {
+          l.entregue = 1;
+        });
+
+        save();
+        renderLoc();
+        $("lMsg").textContent = `Entrega confirmada para o pedido de ${esc(g.cliente)}.`;
+      };
+    }
 
     // Editar Pedido Individual
     const btnEdit = $("lTb").querySelector(`[data-edit-pedido="${g.itens[0].id}"]`);
@@ -1424,7 +1464,6 @@ function limparPesquisaCliente(){
   if ($("lBuscaCli")) $("lBuscaCli").focus();
 }
 
-// Vinculação de eventos para busca e filtro por mês
 const elBuscaCli = $("lBuscaCli");
 if (elBuscaCli) {
   elBuscaCli.addEventListener("input", () => { renderLoc(); });
@@ -1847,7 +1886,8 @@ if (nAdd) {
         ini: a,
         fim: b,
         obs: obs,
-        obsCor: obsCor
+        obsCor: obsCor,
+        entregue: 0
       });
     });
 
@@ -2322,7 +2362,7 @@ if(csvLoc){
           return;
         }
 
-        S.loc.push({ id:Date.now()+i, eq:e.id, cliente:cl, tel, qtd:q, ini:a, fim:b });
+        S.loc.push({ id:Date.now()+i, eq:e.id, cliente:cl, tel, qtd:q, ini:a, fim:b, entregue:0 });
         ok++;
       });
 
@@ -2576,7 +2616,7 @@ if(cfgMd){
 
 
 // ============================================================
-// MOVIMENTAÇÃO DO DIA
+// MOVIMENTAÇÃO DO DIA (OUVINTES DE EVENTOS)
 // ============================================================
 
 const dDia=$("dDia");
@@ -2613,16 +2653,38 @@ if(dHoje){
 const dOut=$("dOut");
 if(dOut){
   dOut.onclick=e=>{
-    const b=e.target.closest("[data-vc-ids]");
-    if(!b)return;
+    // Confirmação de Entrega na Movimentação do Dia
+    const bEnt = e.target.closest("[data-ent-ids]");
+    if (bEnt) {
+      const ids = bEnt.dataset.entIds.split(",").map(Number);
+      const itensDoGrupo = S.loc.filter(l => ids.includes(l.id));
+      if (!itensDoGrupo.length) return;
+
+      const clienteNome = itensDoGrupo[0].cliente;
+      itensDoGrupo.forEach(l => {
+        l.entregue = 1;
+      });
+
+      save();
+      renderLoc();
+      renderDia();
+
+      const msgEl = $("lMsg");
+      if (msgEl) msgEl.textContent = `Entrega confirmada para o pedido de ${esc(clienteNome)}.`;
+      return;
+    }
+
+    // Confirmações de Devolução / Retirada na Movimentação do Dia
+    const b = e.target.closest("[data-vc-ids]");
+    if (!b) return;
     const [idsStr, tipo] = b.dataset.vcIds.split("|");
     const ids = idsStr.split(",").map(Number);
 
     const itensDoGrupo = S.loc.filter(l => ids.includes(l.id));
 
-    if(!itensDoGrupo.length) return;
+    if (!itensDoGrupo.length) return;
 
-    const h0=hojeLocal();
+    const h0 = hojeLocal();
     const clienteNome = itensDoGrupo[0].cliente;
 
     itensDoGrupo.forEach(l => {
@@ -2635,7 +2697,7 @@ if(dOut){
     renderDia();
     
     const msgEl = $("lMsg");
-    if(msgEl) msgEl.textContent = `${tipo} confirmada para o pedido de ${esc(clienteNome)}.`;
+    if (msgEl) msgEl.textContent = `${tipo} confirmada para o pedido de ${esc(clienteNome)}.`;
   };
 }
 

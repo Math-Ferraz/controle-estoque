@@ -77,10 +77,12 @@ body {
   font: 16px/1.5 "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
 }
 
+/* Expansão da largura da tela para melhor visualização em monitores amplos */
 main {
-  max-width: 1400px;
+  max-width: 1800px;
+  width: 96%;
   margin: 0 auto;
-  padding: 20px clamp(16px, 3vw, 40px);
+  padding: 24px 20px;
 }
 
 h1 {
@@ -145,14 +147,12 @@ nav button[aria-selected="true"] {
 section {
   background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 16px;
+  border-radius: 12px;
+  padding: 24px;
   margin-bottom: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
-#nova section {
-  max-width: 1100px;
-}
 
 /* ==========================================================================
    4. FORMULÁRIOS, LABELS E INPUTS
@@ -175,7 +175,7 @@ label {
 
 input, select {
   font: inherit;
-  padding: 8px;
+  padding: 8px 12px;
   border: 1px solid var(--line);
   border-radius: 6px;
   background: var(--bg);
@@ -239,7 +239,7 @@ table {
 
 th, td {
   text-align: left;
-  padding: 8px;
+  padding: 12px;
   border-bottom: 1px solid var(--line);
   vertical-align: middle;
 }
@@ -248,6 +248,8 @@ th {
   font-size: 13px;
   color: var(--mut);
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 #lTb td:first-child,
@@ -259,6 +261,35 @@ th {
 
 #lTb small, #lTb .warn {
   font-weight: 400;
+}
+
+/* --- Ajustes de espaçamento e botões para a Tabela de Locações (#lTb) --- */
+#lTb tr {
+  border-bottom: 2px solid var(--line);
+}
+
+#lTb td {
+  padding: 18px 12px !important;
+  vertical-align: top !important;
+}
+
+#lTb td:last-child {
+  min-width: 240px;
+}
+
+#lTb td input[type="date"] {
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+#lTb td button.g {
+  margin: 3px 2px;
+  padding: 7px 12px;
+  font-size: 13.5px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .box {
@@ -283,9 +314,10 @@ th {
 
 .tag {
   display: inline-block;
-  padding: 2px 8px;
-  border-radius: 4px;
+  padding: 4px 10px;
+  border-radius: 6px;
   font-size: 12px;
+  font-weight: 600;
   margin-top: 4px;
 }
 
